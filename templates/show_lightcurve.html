@@ -1,0 +1,23 @@
+<!doctype html>
+
+<img src="{{ image }}"/>
+
+{% if ii == 0 %}
+<p><a href="{{ next_page }}">next</a></p>
+<p>First page </p>
+{% elif ii == qmax %}
+<p>Last page </p>
+<p><a href="{{ prev_page }}">prev</a></p>
+{% else %}
+<p><a href="{{ next_page }}">next</a></p>
+<p><a href="{{ prev_page }}">prev</a></p>
+{% endif %}
+
+<p>
+  All lightcurves:<br>
+  {% for alert_name in alert_names %}
+  <p><a href="{{ url_for('plot_lightcurve', alert_name=alert_name) }}">{{ alert_name }}</a></p>
+  {% endfor %}
+</p>
+
+<p><a href="{{ home }}">Back to home.</a></p>

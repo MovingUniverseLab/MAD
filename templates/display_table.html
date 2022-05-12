@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Query results</title>
+</head>
+<body>
+
+  <p>SQL query: {{ query_str }}</p>
+
+  <p><a href="{{ download_csv }}">Click here to download query result as a CSV.</a></p>
+
+  {% if browse_lc %}
+  <p><a href="{{ browse_lightcurves }}">Click here to browse the lightcurves of these events.</a></p>
+  {% endif %}
+  
+  {{ html_table | safe }}
+  
+  <p><a href="{{ start_page }}">Back to home.</a></p>
+</body>
+</html>
