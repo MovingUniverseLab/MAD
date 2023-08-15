@@ -315,7 +315,7 @@ def get_moa_alerts(year):
     # This process is parallelized using Pool (it's really slow to have to loop
     # over all pages, and this is an embarassingly parallel process.)
     _t0 = time.time()     
-    num_workers = mp.cpu_count()  
+    num_workers = mp.cpu_count()  -2
     pool = mp.Pool(processes=num_workers)
     parallel_results = pool.starmap(get_moa_params, 
                                     zip(alert_dirs, repeat(year), range(npages)))
@@ -338,7 +338,7 @@ def get_moa_alerts(year):
     df.to_sql(con=engine, schema=None, name="alerts", if_exists="append", index=False)
     
     _t1 = time.time()
-    print('Took {0:.2f} seconds'.format(_t1-_t0))
+    print('Read MOA alerts in {0:.2f} seconds'.format(_t1-_t0))
 
 
 def calculate_srcfrac(mag_src, mag_base):
@@ -352,7 +352,7 @@ def calculate_srcfrac(mag_src, mag_base):
     return srcfrac
 
     
-def get_ogle_params(year, nn):  
+def get_ogle_params(year, nn, reg):  
     """
     Get all the different OGLE alert parameters (along with their uncertainties)
     from the individual web pages. The uncertainties are not listed on the 
@@ -362,11 +362,12 @@ def get_ogle_params(year, nn):
     """
     
     # Add a column for the alert name (of the form OBYYNNNN, YY=year, NNN=alert number)
-    alert_name = 'OB' + year[2:] + str(nn + 1).zfill(4) 
+    # Macy modification - use OB for BLG, OD for DG, and OG for GD
+    alert_name = 'O' + reg[0] + year[2:] + str(nn + 1).zfill(4) 
     
     # Go to the alert page and scrape the data.
     url = "https://ogle.astrouw.edu.pl/ogle4/ews/" + year + \
-            "/blg-" + str(nn+1).zfill(4) + ".html"
+            "/" + reg.lower() + "-" + str(nn+1).zfill(4) + ".html"
     response = urlopen(url)
     html = response.read()
     response.close()
@@ -392,7 +393,7 @@ def get_ogle_params(year, nn):
 
     return alert_name, RA, Dec, Tmax, Tmax_e, tau, tau_e, Umin, Umin_e, \
             fbl, fbl_e, Ibl, Ibl_e, I0, I0_e, url
-    
+
 def ogle_str_to_float(list_in, idx):
     """
     Little helper function to turn strings into floats.
@@ -436,15 +437,23 @@ def get_ogle_alerts(year):
     soup = BeautifulSoup(html,"html.parser")
 
     # Figure out how many alert pages there are.
-    npages = len(soup.find_all('td')[0::15])
+    tds = soup.find_all('td')[0::15]
+    npages = len(tds)
+    nblg = sum(list(map(lambda elem: int('BLG' in elem.get_text()), tds)))
+    ndg = sum(list(map(lambda elem: int('DG' in elem.get_text()), tds)))
+    ngd = sum(list(map(lambda elem: int('GD' in elem.get_text()), tds)))
     
     # Grab all the parameters from the OGLE pages.
     # Use pool to parallelize (it is very slow otherwise,
     # since we have to loop through each page individually.)
     _t0 = time.time()     
-    num_workers = mp.cpu_count()  
+    num_workers = mp.cpu_count()  -2
     pool = mp.Pool(processes=num_workers)
-    parallel_results = pool.starmap(get_ogle_params, zip(repeat(year), range(npages)))
+    parallel_results_blg = pool.starmap(get_ogle_params, zip(repeat(year), range(nblg), repeat('BLG')))
+    parallel_results_dg = pool.starmap(get_ogle_params, zip(repeat(year), range(ndg), repeat('DG')))
+    parallel_results_gd = pool.starmap(get_ogle_params, zip(repeat(year), range(ngd), repeat('GD')))
+    parallel_results = parallel_results_blg + parallel_results_dg + parallel_results_gd
+    #print(parallel_results)
     _t1 = time.time() 
 
     # Put it all into a dataframe and write out to the database.
@@ -460,7 +469,7 @@ def get_ogle_alerts(year):
 
     df.to_sql(con=engine, schema=None, name="alerts", if_exists="append", index=False)
     
-    print('Took {0:.2f} seconds'.format(_t1-_t0))
+    print('Read OGLE alerts in {0:.2f} seconds'.format(_t1-_t0))
     
 def get_kmtnet_alerts(year):
     """
@@ -499,7 +508,7 @@ def get_kmtnet_alerts(year):
     # classifications ("EF" and "AL", I don't know what it means).
     # For years where there are two classifications, I've picked 
     # AL classification arbitrarily.
-    if year in ['2022', '2020', '2017', '2016']:
+    if year in ['2023','2022', '2020', '2017', '2016']:
         class_ = soup.find_all('td')[3::15][1:]
         RA = soup.find_all('td')[4::15][1:]
         Dec = soup.find_all('td')[5::15][1:]
@@ -529,14 +538,14 @@ def get_kmtnet_alerts(year):
     u_0_list = [kmtnet_str_to_float(item) for item in u_0]
     Isource_list = [kmtnet_str_to_float(item) for item in Isource]
     Ibase_list = [kmtnet_str_to_float(item) for item in Ibase]
-    if year in ['2022', '2020', '2017', '2016']:
+    if year in ['2023','2022', '2020', '2017', '2016']:
         class_list = [item.get_text().replace(u'\xa0', u'') for item in class_]
     elif year in ['2021', '2019', '2018']:
         classEF_list = [item.get_text().replace(u'\xa0', u'') for item in classEF]
         classAL_list = [item.get_text().replace(u'\xa0', u'') for item in classAL]
 
     # Get link to the alert page.
-    if year in ['2022', '2020', '2017', '2016']:
+    if year in ['2023','2022', '2020', '2017', '2016']:
         alert_url = soup.find_all('td')[0::15][1:]
     elif year in ['2021', '2019', '2018']:
         alert_url = soup.find_all('td')[0::16][1:]
@@ -551,7 +560,7 @@ def get_kmtnet_alerts(year):
     for ii in np.arange(nn):
         alert_name.append('KB' + year[2:] + str(ii+1).zfill(4))
 
-    if year in ['2022', '2020', '2017', '2016']:
+    if year in ['2023','2022', '2020', '2017', '2016']:
         # Put it all into a dataframe and write out to the database.
         df = pd.DataFrame(list(zip(alert_name, RA_list, Dec_list, t_0_list, t_E_list, u_0_list, 
                                    Isource_list, Ibase_list, class_list, alert_url_list)),
