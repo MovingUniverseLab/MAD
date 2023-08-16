@@ -13,9 +13,10 @@ import requests
 import time
 import multiprocessing as mp
 from itertools import repeat
+from datetime import date
 
 # Setting up database stuff with SQLAlchemy.
-engine = create_engine('sqlite:///microlensing.db')
+engine = create_engine('sqlite:///microlensing_'+str(date.today())+'.db')
 
 def get_moa_lightcurves(year):
     """
@@ -110,7 +111,7 @@ def get_moa_lightcurves(year):
         df[cols].to_sql(con=engine, schema=None, name="photometry", if_exists="append", index=False)
     t1 = time.time() 
     
-    print('Took {0:.2f} seconds'.format(t1-t0))
+    print('Read', len(alert_dirs), ' light curves from MOA in {0:.2f} seconds'.format(t1-t0))
     
 def get_ogle_lightcurves(year):
     """
@@ -134,39 +135,41 @@ def get_ogle_lightcurves(year):
     ftp.login()
     ftp.cwd("ogle/ogle4/ews/" + year + "/")
     
-    # Figure out how many objects there are by counting the number of .tar.gz files 
-    # in the directory (each .tar.gz file corresponds to an alert)
-    nobj = sum('.tar.gz' in x for x in ftp.nlst())
+    # Figure out how many objects there are in each category
+    prefs = ['blg','dg','gd']
+    nobjs = [int(sum(pref in x for x in ftp.nlst())/2) for pref in prefs]
  
     t0 = time.time() 
-    for nn in np.arange(start=1, stop=nobj+1, step=1):
-        # Grab the photometry for each alert.
-        ftp.cwd("blg-" + str(nn).zfill(4))
-        
-        flo = BytesIO()
-        ftp.retrbinary('RETR phot.dat', flo.write)
-        flo.seek(0)
-        df = pd.read_fwf(flo, header=0, 
-                         names=['hjd', 'mag', 'mag_err', 'see', 'sky'], 
-                         widths=[14, 7, 6, 5, 8])
+    # Cycle through each alert category
+    for i_pref, pref in enumerate(prefs):
+        for nn in np.arange(start=1, stop=nobjs[i_pref]+1, step=1):
+            # Grab the photometry for each alert.
+            ftp.cwd(pref+"-" + str(nn).zfill(4))
+            
+            flo = BytesIO()
+            ftp.retrbinary('RETR phot.dat', flo.write)
+            flo.seek(0)
+            df = pd.read_fwf(flo, header=0, 
+                             names=['hjd', 'mag', 'mag_err', 'see', 'sky'], 
+                             widths=[14, 7, 6, 5, 8])
 
-        # Add a column for the alert name (of the form OBYYNNNN, YY=year, NNN=alert number)
-        # and telescope (OGLE)
-        df['alert_name'] = 'OB' + year[2:] + str(nn).zfill(4) 
-        df['telescope'] = 'OGLE'
-        
-        # Write HJD as HJD - 2450000 (less cumbersome digits)
-        df['hjd'] -= 2450000
-        
-        # Write out the HJD, mag, mag_err, telescope, and alert_name data into the table.
-        cols = ['hjd', 'mag', 'mag_err', 'telescope', 'alert_name']
-        df[cols].to_sql(con=engine, schema=None, name="photometry", if_exists="append", index=False)
+            # Add a column for the alert name (of the form O[B/D/G]YYNNNN, YY=year, NNN=alert number)
+            # and telescope (OGLE)
+            df['alert_name'] = 'O' + pref[0].upper() + year[2:] + str(nn).zfill(4) 
+            df['telescope'] = 'OGLE'
+            
+            # Write HJD as HJD - 2450000 (less cumbersome digits)
+            df['hjd'] -= 2450000
+            
+            # Write out the HJD, mag, mag_err, telescope, and alert_name data into the table.
+            cols = ['hjd', 'mag', 'mag_err', 'telescope', 'alert_name']
+            df[cols].to_sql(con=engine, schema=None, name="photometry", if_exists="append", index=False)
 
-        ftp.cwd("../")
+            ftp.cwd("../")
     t1 = time.time() 
     ftp.close()
     
-    print('Took {0:.2f} seconds'.format(t1-t0))
+    print('Read', sum(nobjs), 'light curves from OGLE in {0:.2f} seconds'.format(t1-t0))
     
 def get_kmtnet_lightcurves(year):
     """
@@ -231,7 +234,7 @@ def get_kmtnet_lightcurves(year):
                                 if_exists="append", index=False)
     t1 = time.time()             
     
-    print('Took {0:.2f} seconds'.format(t1-t0))
+    print('Read', nobj, 'light curves from KMTNet in {0:.2f} seconds'.format(t1-t0))
 
 def get_moa_params(alert_dir, year, nn):  
     """
@@ -334,11 +337,29 @@ def get_moa_alerts(year):
     df['Isrc_err'] = np.nan
     df['srcfrac'] = np.nan
     df['srcfrac_err'] = np.nan
+
+    # Get OGLE related events
+    moa2ogle_url = 'http://www.massey.ac.nz/~iabond/moa/alert'+year+'/fetchtxt.php?path=moa/alert'+year+'/moa2ogle.txt'
+    moa2ogle_df = pd.read_csv(BytesIO(requests.get(moa2ogle_url).content),usecols = (0,2),
+                         delim_whitespace=True, skiprows=6, skipfooter=1, header=None, engine='python', 
+                         names=['name1', 'name2'])
+    moa2ogle_pairs = np.sort(np.transpose([moa2ogle_df['name1'],moa2ogle_df['name2']]))
+    moa2ogle_cols = np.transpose(moa2ogle_pairs)
+    moa_evs = [moa_ev[0]+moa_ev[9]+year[2:]+moa_ev[-3:] for moa_ev in moa2ogle_cols[0]]
+    ogle_evs=[ogle_ev[0]+ogle_ev[10]+year[2:]+ogle_ev[-4:] for ogle_ev in moa2ogle_cols[1]]
+    rel_evs = []
+    for moa_ev in df['alert_name']:
+        i_rel_ev = np.argwhere(moa_ev==np.array(moa_evs))
+        if len(i_rel_ev)==0:
+            rel_evs.append('')
+        else:
+            rel_evs.append(ogle_evs[i_rel_ev[0][0]])
+    df['related_event'] = rel_evs
     
     df.to_sql(con=engine, schema=None, name="alerts", if_exists="append", index=False)
     
     _t1 = time.time()
-    print('Read MOA alerts in {0:.2f} seconds'.format(_t1-_t0))
+    print('Read', len(df['alert_name']), 'MOA alerts in {0:.2f} seconds'.format(_t1-_t0))
 
 
 def calculate_srcfrac(mag_src, mag_base):
@@ -422,7 +443,7 @@ def get_ogle_alerts(year):
     ----------
     year : int
         Year of the OGLE alerts you want.
-        Valid choices are 2001 - 2019, inclusive.
+        Valid choices are 2001 - 2023, inclusive.
         
     Outputs
     -------
@@ -463,13 +484,14 @@ def get_ogle_alerts(year):
 
     # Add in missing columns
     df['class'] = 'microlensing'
+    df['related_event'] = ''
     
     # Write HJD as HJD - 2450000 (less cumbersome digits)
     df['t0'] -= 2450000
 
     df.to_sql(con=engine, schema=None, name="alerts", if_exists="append", index=False)
     
-    print('Read OGLE alerts in {0:.2f} seconds'.format(_t1-_t0))
+    print('Read', npages, 'OGLE alerts in {0:.2f} seconds'.format(_t1-_t0))
     
 def get_kmtnet_alerts(year):
     """
@@ -481,7 +503,7 @@ def get_kmtnet_alerts(year):
     ----------
     year : int
         Year of the KMTNet alerts you want.
-        Valid choices are 2016 - 2022, inclusive.
+        Valid choices are 2016 - 2023, inclusive.
         
     Outputs
     -------
@@ -502,6 +524,8 @@ def get_kmtnet_alerts(year):
     response.close()
     soup = BeautifulSoup(html,"html.parser")
 
+    _t0 = time.time()     
+
     # For some annoying reason, the KMTNet alerts system changes
     # across years randomly. Some years they report a single
     # classification for alerts, other years there are two 
@@ -517,6 +541,7 @@ def get_kmtnet_alerts(year):
         u_0 = soup.find_all('td')[8::15][1:]
         Isource = soup.find_all('td')[9::15][1:]
         Ibase = soup.find_all('td')[10::15][1:]
+        rel_ev = soup.find_all('td')[14::15][1:]
     elif year in ['2021', '2019', '2018']:
         classEF = soup.find_all('td')[3::16][1:]
         classAL = soup.find_all('td')[4::16][1:]
@@ -527,6 +552,7 @@ def get_kmtnet_alerts(year):
         u_0 = soup.find_all('td')[9::16][1:]
         Isource = soup.find_all('td')[10::16][1:]
         Ibase = soup.find_all('td')[11::16][1:]
+        rel_ev = soup.find_all('td')[15::16][1:]
     else:
         raise Exception('Not a valid year')
 
@@ -538,6 +564,7 @@ def get_kmtnet_alerts(year):
     u_0_list = [kmtnet_str_to_float(item) for item in u_0]
     Isource_list = [kmtnet_str_to_float(item) for item in Isource]
     Ibase_list = [kmtnet_str_to_float(item) for item in Ibase]
+    rel_ev_list = [item.get_text().replace(u'\xa0', u'') for item in rel_ev]
     if year in ['2023','2022', '2020', '2017', '2016']:
         class_list = [item.get_text().replace(u'\xa0', u'') for item in class_]
     elif year in ['2021', '2019', '2018']:
@@ -579,5 +606,11 @@ def get_kmtnet_alerts(year):
     df['Isrc_err'] = np.nan
     df['srcfrac'] = calculate_srcfrac(df['Isrc'], df['Ibase'])
     df['srcfrac_err'] = np.nan
+    df['related_event'] = rel_ev_list
+
+    _t1 = time.time() 
     
     df.to_sql(con=engine, schema=None, name="alerts", if_exists="append", index=False)
+
+    print('Read', len(df['alert_name']), 'KMTNet alerts in {0:.2f} seconds'.format(_t1-_t0))
+
