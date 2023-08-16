@@ -19,7 +19,6 @@ from glob import glob
 app = Flask(__name__)
 
 # Access the latest database, unless otherwise specified via command line.
-print(argv)
 if len(argv)==1:
     latest_db = np.sort(glob('*microlensing*.db'))[-1]
     engine = create_engine('sqlite:///'+latest_db)
