@@ -40,8 +40,10 @@ def query_db():
         # so we can pass the results into a table for display on the page.
         query_str = text(request.form['query'])
         with engine.connect() as conn:
+            df_full_alerts = pd.read_sql(text('SELECT * FROM alerts'), conn)
             df_query_result = pd.read_sql(query_str, conn)
-            df_html = df_query_result.to_html()
+            df_html = df_query_result.to_html(formatters={'alert_name': lambda x: multi_det(x, df_full_alerts)},
+                escape=False, render_links=True)
             
             # If 'alert_name' is returned in the query, provide the
             # option to view the lightcurves in the template.
@@ -65,6 +67,18 @@ def query_db():
                                    browse_lightcurves=url_for('browse_lightcurves'))
         
     return render_template('query.html')
+
+
+#Formatter functions ?
+def multi_det(alert_name, df):
+    is_rel_ev = df['related_event'].str.contains(alert_name).any()
+    #print('PRINT STATEMENT',np.argwhere(np.array((df['alert_name']==alert_name))))
+    i_event = np.argwhere(np.array(df['alert_name']==alert_name))[0][0]
+    has_rel_ev = len(df['related_event'][i_event])>1
+    if is_rel_ev or has_rel_ev:
+        return '<b>'+alert_name+'</b>'
+    else:
+        return alert_name
 
 
 @app.route('/download_csv/<query_str>', methods=['GET', 'POST'])
