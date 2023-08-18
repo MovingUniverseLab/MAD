@@ -217,6 +217,7 @@ def get_kmtnet_lightcurves(year):
                 # Grab the photometry for each alert's I-band lightcurve data into a pands dataframe.
                 url = "https://kmtnet.kasi.re.kr/~ulens/event/" + year + "/data/KB" + \
                         year[2:] + str(nn).zfill(4) + "/pysis/" + pysis_name
+
                 bytes_data = requests.get(url).content
                 df = pd.read_csv(BytesIO(bytes_data), 
                                  delim_whitespace=True, skiprows=1, header=None, 
@@ -227,6 +228,9 @@ def get_kmtnet_lightcurves(year):
                 # and telescope (lightcurve's pysis file.)
                 df['alert_name'] = 'KB' + year[2:] + str(nn).zfill(4) 
                 df['telescope'] = pysis_name
+                
+                # Write HJD as HJD - 2450000 (less cumbersome digits)
+                df['hjd'] -= 2450000
 
                 # Write out the HJD, mag, mag_err, telescope, and alert_name data into the table.
                 cols = ['hjd', 'mag', 'mag_err', 'telescope', 'alert_name']

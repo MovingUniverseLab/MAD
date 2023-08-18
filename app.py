@@ -131,10 +131,10 @@ def plot_lightcurve(alert_name):
     #####
     # Get the year of the alert.
     YY = alert_name[2:4]
-    
+
     # The *1 is just a dumb trick to turn it into an integer.
     year = ne.evaluate(YY) * 1 
-    
+
     # HJD date corresponding to 1 January 2000.
     hjd_jan_00 = 1154
 
@@ -146,7 +146,7 @@ def plot_lightcurve(alert_name):
     
     # Now only keep things from the year of and before.
     keep_idx = np.where((time < end_date) & (time > start_date))[0]
-    
+
     # Finally... make the plot.
     fig = create_figure(time[keep_idx], mag[keep_idx], mag_err[keep_idx], alert_name)
     
