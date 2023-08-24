@@ -1,4 +1,5 @@
 import os
+from sys import argv
 import pandas as pd
 import numpy as np
 from flask import Flask, Response, flash, request, redirect, url_for, send_from_directory, render_template
@@ -13,14 +14,16 @@ import io
 import base64
 import numexpr as ne
 from flask import make_response
-
+from glob import glob
 
 app = Flask(__name__)
 
-
-# The database.
-engine = create_engine('sqlite:///microlensing.db')
-
+# Access the latest database, unless otherwise specified via command line.
+if len(argv)==1:
+    latest_db = np.sort(glob('*microlensing*.db'))[-1]
+    engine = create_engine('sqlite:///'+latest_db)
+else:
+    engine = create_engine('sqlite:///microlensing'+argv[1]+'.db')
 
 @app.route('/', methods=['GET', 'POST'])
 def query_db():
@@ -35,10 +38,12 @@ def query_db():
     if request.method == 'POST':
         # Use pandas to perform the SQL query, then convert it to html
         # so we can pass the results into a table for display on the page.
-        query_str = request.form['query']
+        query_str = text(request.form['query'])
         with engine.connect() as conn:
+            df_full_alerts = pd.read_sql(text('SELECT * FROM alerts'), conn)
             df_query_result = pd.read_sql(query_str, conn)
-            df_html = df_query_result.to_html()
+            df_html = df_query_result.to_html(formatters={'alert_name': lambda x: multi_det(x, df_full_alerts)},
+                escape=False, render_links=True)
             
             # If 'alert_name' is returned in the query, provide the
             # option to view the lightcurves in the template.
@@ -62,6 +67,18 @@ def query_db():
                                    browse_lightcurves=url_for('browse_lightcurves'))
         
     return render_template('query.html')
+
+
+#Formatter functions ?
+def multi_det(alert_name, df):
+    is_rel_ev = df['related_event'].str.contains(alert_name).any()
+    #print('PRINT STATEMENT',np.argwhere(np.array((df['alert_name']==alert_name))))
+    i_event = np.argwhere(np.array(df['alert_name']==alert_name))[0][0]
+    has_rel_ev = len(df['related_event'][i_event])>1
+    if is_rel_ev or has_rel_ev:
+        return '<b>'+alert_name+'</b>'
+    else:
+        return alert_name
 
 
 @app.route('/download_csv/<query_str>', methods=['GET', 'POST'])
@@ -100,8 +117,9 @@ def plot_lightcurve(alert_name):
     Page that shows the MOA lightcurve in magnitude space.
     """
     # Grab the hjd, mag, mag_err corresponding to the alert name.
-    query_str = 'SELECT hjd, mag, mag_err FROM photometry WHERE alert_name = "' + alert_name + '"' 
-    db_info = engine.execute(query_str).fetchall()
+    query_str = text('SELECT hjd, mag, mag_err FROM photometry WHERE alert_name = "' + alert_name + '"')
+    with engine.connect() as conn:
+        db_info = conn.execute(query_str).fetchall()
     time = np.array([info[0] for info in db_info])
     mag = np.array([info[1] for info in db_info])
     mag_err = np.array([info[2] for info in db_info])
@@ -113,10 +131,10 @@ def plot_lightcurve(alert_name):
     #####
     # Get the year of the alert.
     YY = alert_name[2:4]
-    
+
     # The *1 is just a dumb trick to turn it into an integer.
     year = ne.evaluate(YY) * 1 
-    
+
     # HJD date corresponding to 1 January 2000.
     hjd_jan_00 = 1154
 
@@ -128,7 +146,7 @@ def plot_lightcurve(alert_name):
     
     # Now only keep things from the year of and before.
     keep_idx = np.where((time < end_date) & (time > start_date))[0]
-    
+
     # Finally... make the plot.
     fig = create_figure(time[keep_idx], mag[keep_idx], mag_err[keep_idx], alert_name)
     
