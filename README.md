@@ -1,8 +1,6 @@
 Microlensing Alert Database (MAD)
 
-Spring 2022 Ay250 Final Project
-
-Casey Lam (casey_lam@berkeley.edu)
+Initially created as Spring 2022 Ay250 Final Project by Casey Lam (casey_lam@berkeley.edu), with revisions by Macy Huston
 
 # MAD 
 Microlensing Alerts Database (MAD) is a Flask webapp that allows the user to 
@@ -45,7 +43,7 @@ to re-analyze and visualize ourselves.
 The database can then also be easily updated to grab the latest changes, and
 the same query can be re-run, to see what changes.
 
-### Workflow/general structure of MAD
+### File structure of MAD
 There are three python files:
 1. `app.py`. 
 This is the Flask app itself.
@@ -56,9 +54,10 @@ It primarily consists of functions that scrape microlensing event alerts
 and lightcurves from the OGLE, KMTNet, and MOA websites.
 3. `populate_database.py`.
 This is a very short script that calls `query_alerts.py` that populates the database.
-This can (and should) be edited by the user depending on what set of alerts and photometry
+This can be edited by the user depending on what set of alerts and photometry
 they are particularly interested in.
 
+### Workflow
 Note that before the Flask app (`app.py`) can be run, `populate_database.py` must have been run.
 
 By running `populate_database.py`, a database called `microlensing.db` is created.
@@ -70,23 +69,19 @@ In the `photometry` table, `alert_name` is the foreign key.
 Each row in the `photometry` table also contains the date, magnitude, magnitude uncertainty, 
 and telescope information for each observation.
 
-### Final project practicalities
-This project uses a lot of concepts from the web and databases lectures.
-There is also a bit of numpy/pandas and parallelization usage.
+### Future work - simpler items
+1. Save fewer decimals for some of the numbers in the table (like HJD or mag).
+2. Add galactic coordinates to the output table.
+3. Figure out why populate_database currently only runs in ipython, not command line.
 
-### Future work (aka things I did not get to before the project was due)
-In no particular order...
+### Future work - potential complex items
 1. Parallelize lightcurve download (currently ~1 hour for each alert system year). 
 Need to figure out parallel writing to SQL database (is that allowed) as well as
 how to parallelize ftp downloads.
-2. Add a table of duplicated/crossmatched events across the three systems.
-MOA and KMTNet already provide this information.
-I just need to scrape it and put it into a new table.
-3. Save less decimals for some of the numbers in the table (like HJD or mag).
-4. Implementing some automated way of updating the database.
+2. Implementing some automated way of updating the database.
 (See notes from meeting with Josh.)
-5. Add unit tests.
-6. Better error handling (e.g. if you put in an invalid SQL query, right now,
+3. Add unit tests.
+4. Better error handling (e.g. if you put in an invalid SQL query, right now,
 the Flask app will just fail-- ideally, it should bring you to a page that 
 explains why the error exists, then prompts you for another query). 
-7. Caching or some way to make the lightcurve viewing faster.
+5. Caching or some way to make the lightcurve viewing faster.
