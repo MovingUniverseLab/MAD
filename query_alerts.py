@@ -611,6 +611,9 @@ def get_kmtnet_alerts(year):
     df['srcfrac'] = calculate_srcfrac(df['Isrc'], df['Ibase'])
     df['srcfrac_err'] = np.nan
     df['related_event'] = rel_ev_list
+    
+    #fix dates
+    df['t0']=df['t0']-50000
 
     _t1 = time.time() 
     
