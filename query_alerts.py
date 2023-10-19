@@ -432,7 +432,7 @@ def ogle_str_to_float(list_in, idx):
     Little helper function to turn strings into floats.
     """
     try:
-        return float(ne.evaluate(list_in[idx]))
+        return round(2, float(ne.evaluate(list_in[idx])))
     except:
         return np.nan
     
@@ -441,7 +441,7 @@ def moa_str_to_float(str_in):
     Little helper function to turn strings into floats.
     """
     try:
-        return float(ne.evaluate(str_in))
+        return round(2, float(ne.evaluate(str_in)))
     except:
         return np.nan
         
