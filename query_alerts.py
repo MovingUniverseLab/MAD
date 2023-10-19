@@ -264,11 +264,11 @@ def get_moa_params(alert_dir, year, nn):
     meta = soup.find('div', id="metadata").text
     RA = meta.split('RA:')[1].split('Dec:')[0]
     Dec = meta.split('RA:')[1].split('Dec:')[1].split('Current')[0]
-    #print('TEST PRINT',RA,Dec)
+
     c = SkyCoord(ra=RA, dec=Dec, unit=(u.hourangle, u.deg), frame='icrs')
-    #print('.     ', c)
-    GC_b = c.galactic.b
-    GC_l = c.galactic.l
+    GC_b = c.galactic.b.degree
+    GC_l = c.galactic.l.degree
+
 
     tmax_str = soup.find('div', id="lastphot").text.split('<td>=<td align=right>')[1]
     tmax = moa_str_to_float(tmax_str.split()[1])
@@ -434,7 +434,7 @@ def ogle_str_to_float(list_in, idx):
     Little helper function to turn strings into floats.
     """
     try:
-        return float(ne.evaluate(list_in[idx]))
+        return round(2, float(ne.evaluate(list_in[idx])))
     except:
         return np.nan
     
@@ -443,7 +443,7 @@ def moa_str_to_float(str_in):
     Little helper function to turn strings into floats.
     """
     try:
-        return float(ne.evaluate(str_in))
+        return round(2, float(ne.evaluate(str_in)))
     except:
         return np.nan
         
