@@ -1,5 +1,7 @@
 
 import ftplib
+from astropy import units as u
+from astropy.coordinates import SkyCoord
 from sqlalchemy import create_engine, text
 from sqlalchemy.sql import select
 from bs4 import BeautifulSoup
@@ -262,6 +264,9 @@ def get_moa_params(alert_dir, year, nn):
     meta = soup.find('div', id="metadata").text
     RA = meta.split('RA:')[1].split('Dec:')[0]
     Dec = meta.split('RA:')[1].split('Dec:')[1].split('Current')[0]
+    c = SkyCoord(ra=RA*u.degree, dec=Dec*u.degree, frame='icrs')
+    GC_b = c.b
+    GC_l = c.l
 
     tmax_str = soup.find('div', id="lastphot").text.split('<td>=<td align=right>')[1]
     tmax = moa_str_to_float(tmax_str.split()[1])
@@ -281,7 +286,7 @@ def get_moa_params(alert_dir, year, nn):
 
     assessment = soup.find('div', id="metadata").find_all('td', align='right')[4].text
     
-    return alert_name, RA, Dec, tmax, tmax_e, tE, tE_e, \
+    return alert_name, RA, Dec, GC_b, GC_l, tmax, tmax_e, tE, tE_e, \
             u0, u0_e, Ibase, Ibase_e, assessment, url
     
 def get_moa_alerts(year):
@@ -330,7 +335,7 @@ def get_moa_alerts(year):
     
     # Put it all into a dataframe and write out to the database.
     df = pd.DataFrame(parallel_results,
-                     columns = ['alert_name', 'RA', 'Dec', 't0', 't0_err', 'tE', 'tE_err', 
+                     columns = ['alert_name', 'RA', 'Dec', 'GC_b', 'GC_l', 't0', 't0_err', 'tE', 'tE_err', 
                                 'u0', 'u0_err', 'Ibase', 'Ibase_err', 'class', 'alert_url'])
     
     # Write HJD as HJD - 2450000 (less cumbersome digits)
@@ -403,6 +408,9 @@ def get_ogle_params(year, nn, reg):
     # Parse the scraped data.
     RA = header_list[7]
     Dec = header_list[10]
+    c = SkyCoord(ra=RA*u.degree, dec=Dec*u.degree, frame='icrs')
+    GC_b = c.b
+    GC_l = c.l
     Tmax = ogle_str_to_float(param_list, 1)
     Tmax_e = ogle_str_to_float(param_list, 3)
     tau =  ogle_str_to_float(param_list, 7)
@@ -416,7 +424,7 @@ def get_ogle_params(year, nn, reg):
     I0 = ogle_str_to_float(param_list, 31)
     I0_e =  ogle_str_to_float(param_list, 33)
 
-    return alert_name, RA, Dec, Tmax, Tmax_e, tau, tau_e, Umin, Umin_e, \
+    return alert_name, RA, Dec, GC_b, GC_l, Tmax, Tmax_e, tau, tau_e, Umin, Umin_e, \
             fbl, fbl_e, Ibl, Ibl_e, I0, I0_e, url
 
 def ogle_str_to_float(list_in, idx):
@@ -483,7 +491,7 @@ def get_ogle_alerts(year):
 
     # Put it all into a dataframe and write out to the database.
     df = pd.DataFrame(parallel_results,
-                     columns =['alert_name', 'RA', 'Dec', 't0', 't0_err', 'tE', 'tE_err', 'u0', 'u0_err', 
+                     columns =['alert_name', 'RA', 'Dec', 'GC_b', 'GC_l', 't0', 't0_err', 'tE', 'tE_err', 'u0', 'u0_err', 
                                'srcfrac', 'srcfrac_err', 'Ibase', 'Ibase_err', 'Isrc', 'Isrc_err', 'alert_url'])
 
     # Add in missing columns
@@ -540,6 +548,9 @@ def get_kmtnet_alerts(year):
         class_ = soup.find_all('td')[3::15][1:]
         RA = soup.find_all('td')[4::15][1:]
         Dec = soup.find_all('td')[5::15][1:]
+        c = SkyCoord(ra=RA*u.degree, dec=Dec*u.degree, frame='icrs')
+        GC_b = c.b
+        GC_l = c.l
         t_0 = soup.find_all('td')[6::15][1:]
         t_E = soup.find_all('td')[7::15][1:]
         u_0 = soup.find_all('td')[8::15][1:]
@@ -551,6 +562,9 @@ def get_kmtnet_alerts(year):
         classAL = soup.find_all('td')[4::16][1:]
         RA = soup.find_all('td')[5::16][1:]
         Dec = soup.find_all('td')[6::16][1:]
+        c = SkyCoord(ra=RA*u.degree, dec=Dec*u.degree, frame='icrs')
+        GC_b = c.b
+        GC_l = c.l
         t_0 = soup.find_all('td')[7::16][1:]
         t_E = soup.find_all('td')[8::16][1:]
         u_0 = soup.find_all('td')[9::16][1:]
@@ -595,12 +609,12 @@ def get_kmtnet_alerts(year):
         # Put it all into a dataframe and write out to the database.
         df = pd.DataFrame(list(zip(alert_name, RA_list, Dec_list, t_0_list, t_E_list, u_0_list, 
                                    Isource_list, Ibase_list, class_list, alert_url_list)),
-                         columns =['alert_name', 'RA', 'Dec', 't0', 'tE', 'u0',
+                         columns =['alert_name', 'RA', 'Dec', 'GC_b', 'GC_l', 't0', 'tE', 'u0',
                                    'Isrc', 'Ibase', 'class', 'alert_url'])
     elif year in ['2021', '2019', '2018']:
         df = pd.DataFrame(list(zip(alert_name, RA_list, Dec_list, t_0_list, t_E_list, u_0_list, 
                            Isource_list, Ibase_list, classEF_list, alert_url_list)),
-                 columns =['alert_name', 'RA', 'Dec', 't0', 'tE', 'u0',
+                 columns =['alert_name', 'RA', 'Dec', 'GC_b', 'GC_l', 't0', 'tE', 'u0',
                            'Isrc', 'Ibase', 'class', 'alert_url'])
      
     df['t0_err'] = np.nan
@@ -611,9 +625,6 @@ def get_kmtnet_alerts(year):
     df['srcfrac'] = calculate_srcfrac(df['Isrc'], df['Ibase'])
     df['srcfrac_err'] = np.nan
     df['related_event'] = rel_ev_list
-    
-    #fix dates
-    df['t0']=df['t0']-50000
 
     _t1 = time.time() 
     

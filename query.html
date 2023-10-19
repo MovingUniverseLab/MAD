@@ -1,0 +1,120 @@
+<!doctype html>
+
+<p><h1>Welcome to the Microlensing Alert Database (MAD)!</h1></p>
+
+<p>
+  Use SQL query syntax to query the microlensing.db database.<br>
+  Tables in database available to query are "alerts" and "photometry".
+</p>
+
+<form method=post enctype=multipart/form-data>
+  SQL query:
+  <input type=text name=query size=100>
+</form>
+
+<p>
+  The columns for the "alerts" table are listed in the table below.<br>
+  <i>Note that KMTNet does not provide uncertainties on the parameter estimates.</i><br>
+  <table border='1'>
+    <tr>
+      <th>Column name</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>alert_name</td>
+      <td>e.g. MBYYNNN, OBYYNNNN, KBYYNNNN</td>
+    </tr>
+    <tr>
+      <td>RA</td>
+      <td>J2000.0</td>
+    </tr>
+    <tr>
+      <td>Dec</td>
+      <td>J2000.0</td>
+    </tr>
+    <tr>
+      <td>GC_b</td>
+      <td>Galactic latitude</td>
+    </tr>
+    <tr>
+      <td>GC_l</td>
+      <td>Glactic longitude</td>
+    </tr>
+    <tr>
+      <td>t0, t0_err</td>
+      <td>Time of maximum brightness (1)</td>
+    </tr>
+    <tr>
+      <td>tE, tE_err</td>
+      <td>Einstein crossing time (2)</td>
+    </tr>
+    <tr>
+      <td>u0, u0_err</td>
+      <td>Dimensionless impact parameter (3)</td>
+    </tr>
+    <tr>
+      <td>Ibase, Ibase_err</td>
+      <td>I-band baseline magnitude (4)</td>
+    </tr>
+    <tr>
+      <td>Isrc, Isrc_err</td>
+      <td>I-band baseline magnitude (5)</td>
+    </tr>
+    <tr>
+      <td>srcfrac, srcfrac_err</td>
+      <td>Source flux fraction (6)</td>
+    </tr>
+    <tr>
+      <td>class</td>
+      <td>Event classification (7)</td>
+    </tr>
+    <tr>
+      <td>alert_url</td>
+      <td>URL to event alert page</td>
+    </tr>
+  </table>
+<p style="font-size: smaller">
+  (1) This is named "tmax" on MOA and OGLE alert sites.<br>
+  (2) This is named "tau" on the OGLE alert site.<br>
+  (3) This is named "Umin" on the OGLE alert site.<br>
+  (4) This is named "Ibl" on the OGLE alert site.<br>
+  (5) This is named "I0" on the OGLE alert site. MOA does not report this parameter.<br>
+  (6) This is named "fbl" on the OGLE alert site. MOA does not report this parameter.<br>
+  KMTNet does not report this parameter, but we calculate it from Ibase and Isrc.<br>
+  (7) This is named "assessment" on the MOA alert site, with values like "microlensing" or "cv".<br> 
+  OGLE only reports microlensing events, so we have labelled all OGLE events as "microlensing".<br>  
+  KMTNet classifies events by their probability of being microlensing events, such as "clear" or "probable".<br>
+  For years where there are two classifications (EF and AL, I cannot find what the meaning of these two are),<br>
+  we arbitrarily have reported the EF classification.<br>
+</p>
+</p>
+
+<p>
+  The columns for the "photometry" table are listed in the table below.
+  <table border='1'>
+    <tr>
+      <th>Column name</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>hjd</td>
+      <td>Heliocentric Julian Date - 2450000</td>
+    </tr>
+    <tr>
+      <td>mag</td>
+      <td>I-band magnitude</td>
+    </tr>
+    <tr>
+      <td>mag_err</td>
+      <td>I-band magnitude error</td>
+    </tr>
+    <tr>
+      <td>alert_name</td>
+      <td>e.g. MBYYNNN, OBYYNNNN, KBYYNNNN</td>
+    </tr>
+    <tr>
+      <td>telescope</td>
+      <td>e.g. MOA, OGLE, KMTXNN_I.pysis</td>
+    </tr>
+  </table>
+</p>
