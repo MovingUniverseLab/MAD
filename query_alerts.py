@@ -264,9 +264,11 @@ def get_moa_params(alert_dir, year, nn):
     meta = soup.find('div', id="metadata").text
     RA = meta.split('RA:')[1].split('Dec:')[0]
     Dec = meta.split('RA:')[1].split('Dec:')[1].split('Current')[0]
-    c = SkyCoord(ra=RA*u.degree, dec=Dec*u.degree, frame='icrs')
-    GC_b = c.b
-    GC_l = c.l
+    #print('TEST PRINT',RA,Dec)
+    c = SkyCoord(ra=RA, dec=Dec, unit=(u.hourangle, u.deg), frame='icrs')
+    #print('.     ', c)
+    GC_b = c.galactic.b
+    GC_l = c.galactic.l
 
     tmax_str = soup.find('div', id="lastphot").text.split('<td>=<td align=right>')[1]
     tmax = moa_str_to_float(tmax_str.split()[1])
