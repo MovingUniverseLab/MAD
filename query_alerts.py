@@ -415,9 +415,9 @@ def get_ogle_params(year, nn, reg):
     # Parse the scraped data.
     RA = header_list[7]
     Dec = header_list[10]
-    c = SkyCoord(ra=RA*u.degree, dec=Dec*u.degree, frame='icrs')
-    GC_b = c.b
-    GC_l = c.l
+    c = SkyCoord(ra=RA, dec=Dec, unit=(u.hourangle, u.deg), frame='icrs')
+    GC_b = c.galactic.b.degree
+    GC_l = c.galactic.l.degree
     Tmax = ogle_str_to_float(param_list, 1)
     Tmax_e = ogle_str_to_float(param_list, 3)
     tau =  ogle_str_to_float(param_list, 7)
@@ -439,7 +439,7 @@ def ogle_str_to_float(list_in, idx):
     Little helper function to turn strings into floats.
     """
     try:
-        return round(2, float(ne.evaluate(list_in[idx])))
+        return float(ne.evaluate(list_in[idx]))
     except:
         return np.nan
     
@@ -448,7 +448,7 @@ def moa_str_to_float(str_in):
     Little helper function to turn strings into floats.
     """
     try:
-        return round(2, float(ne.evaluate(str_in)))
+        return float(ne.evaluate(str_in))
     except:
         return np.nan
         
@@ -555,9 +555,9 @@ def get_kmtnet_alerts(year):
         class_ = soup.find_all('td')[3::15][1:]
         RA = soup.find_all('td')[4::15][1:]
         Dec = soup.find_all('td')[5::15][1:]
-        c = SkyCoord(ra=RA*u.degree, dec=Dec*u.degree, frame='icrs')
-        GC_b = c.b
-        GC_l = c.l
+        c = SkyCoord(ra=RA, dec=Dec, unit=(u.hourangle, u.deg), frame='icrs')
+        GC_b = c.galactic.b.degree
+        GC_l = c.galactic.l.degree
         t_0 = soup.find_all('td')[6::15][1:]
         t_E = soup.find_all('td')[7::15][1:]
         u_0 = soup.find_all('td')[8::15][1:]
@@ -569,9 +569,9 @@ def get_kmtnet_alerts(year):
         classAL = soup.find_all('td')[4::16][1:]
         RA = soup.find_all('td')[5::16][1:]
         Dec = soup.find_all('td')[6::16][1:]
-        c = SkyCoord(ra=RA*u.degree, dec=Dec*u.degree, frame='icrs')
-        GC_b = c.b
-        GC_l = c.l
+        c = SkyCoord(ra=RA, dec=Dec, unit=(u.hourangle, u.deg), frame='icrs')
+        GC_b = c.galactic.b.degree
+        GC_l = c.galactic.l.degree
         t_0 = soup.find_all('td')[7::16][1:]
         t_E = soup.find_all('td')[8::16][1:]
         u_0 = soup.find_all('td')[9::16][1:]
