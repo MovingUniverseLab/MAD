@@ -434,7 +434,7 @@ def ogle_str_to_float(list_in, idx):
     Little helper function to turn strings into floats.
     """
     try:
-        return round(float(ne.evaluate(list_in[idx])), 2)
+        return float(ne.evaluate(list_in[idx]))
     except:
         return np.nan
     
@@ -443,7 +443,7 @@ def moa_str_to_float(str_in):
     Little helper function to turn strings into floats.
     """
     try:
-        return round(float(ne.evaluate(str_in)), 2)
+        return float(ne.evaluate(str_in))
     except:
         return np.nan
         
@@ -564,9 +564,9 @@ def get_kmtnet_alerts(year):
         classAL = soup.find_all('td')[4::16][1:]
         RA = soup.find_all('td')[5::16][1:]
         Dec = soup.find_all('td')[6::16][1:]
-        c = SkyCoord(ra=RA*u.degree, dec=Dec*u.degree, frame='icrs')
-        GC_b = c.b
-        GC_l = c.l
+        c = SkyCoord(ra=RA, dec=Dec, unit=(u.hourangle, u.deg), frame='icrs')
+        GC_b = c.galactic.b.degree
+        GC_l = c.galactic.l.degree
         t_0 = soup.find_all('td')[7::16][1:]
         t_E = soup.find_all('td')[8::16][1:]
         u_0 = soup.find_all('td')[9::16][1:]
