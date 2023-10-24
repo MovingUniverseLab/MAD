@@ -264,14 +264,16 @@ def get_moa_params(alert_dir, year, nn):
     meta = soup.find('div', id="metadata").text
     RA = meta.split('RA:')[1].split('Dec:')[0]
     Dec = meta.split('RA:')[1].split('Dec:')[1].split('Current')[0]
-
     c = SkyCoord(ra=RA, dec=Dec, unit=(u.hourangle, u.deg), frame='icrs')
     GC_b = c.galactic.b.degree
     GC_l = c.galactic.l.degree
 
-
     tmax_str = soup.find('div', id="lastphot").text.split('<td>=<td align=right>')[1]
+    print(soup.find('div', id="lastphot").text)
+    print(tmax_str)
     tmax = moa_str_to_float(tmax_str.split()[1])
+    print(tmax_str.split()[1])
+    print(tmax)
     tmax_e = moa_str_to_float(tmax_str.split('<td>')[2].split()[0])
 
     tE_str = soup.find('div', id="lastphot").text.split('<td>=<td align=right>')[2]
@@ -287,6 +289,9 @@ def get_moa_params(alert_dir, year, nn):
     Ibase_e = moa_str_to_float(Ibase_str.split('<td>')[2].split()[0].split('<')[0])
 
     assessment = soup.find('div', id="metadata").find_all('td', align='right')[4].text
+    
+    print(alert_name, RA, Dec, GC_b, GC_l, tmax, tmax_e, tE, tE_e, \
+            u0, u0_e, Ibase, Ibase_e, assessment, url)
     
     return alert_name, RA, Dec, GC_b, GC_l, tmax, tmax_e, tE, tE_e, \
             u0, u0_e, Ibase, Ibase_e, assessment, url
