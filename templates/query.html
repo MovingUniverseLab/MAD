@@ -7,10 +7,18 @@
   Tables in database available to query are "alerts" and "photometry".
 </p>
 
+<p>
+  Today's Modified Julian Date is:   
+</p>
+
 <form method=post enctype=multipart/form-data>
   SQL query:
   <input type=text name=query size=100>
 </form>
+
+<p>
+  Default SQL query:  SELECT * FROM alerts WHERE ABS(GC_b)<10 AND tE>100 AND Ibase>20 ORDER BY t0_err, tE_err ASC
+</p>
 
 <p>
   The columns for the "alerts" table are listed in the table below.<br>
