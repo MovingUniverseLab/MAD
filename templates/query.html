@@ -8,7 +8,8 @@
 </p>
 
 <p>
-  Today's Modified Julian Date is:   
+  Today's Modified Julian Date is: {{ current_mjd }}
+</form>
 </p>
 
 <form method=post enctype=multipart/form-data>
@@ -17,7 +18,7 @@
 </form>
 
 <p>
-  Default SQL query:  SELECT * FROM alerts WHERE ABS(GC_b)<10 AND tE>100 AND Ibase>20 ORDER BY t0_err, tE_err ASC
+  Default SQL query: SELECT * FROM alerts WHERE ABS(GC_b)<10 AND (tE>=100 OR t0>{{current_mjd}}) AND t0>=({{current_mjd}} - 14) AND Ibase>20 ORDER BY t0_err, tE_err ASC
 </p>
 
 <p>

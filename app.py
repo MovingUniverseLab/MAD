@@ -74,7 +74,7 @@ def query_db():
                                    browse_lc=browse_lc,
                                    browse_lightcurves=url_for('browse_lightcurves'))
         
-    return render_template('query.html')
+    return render_template('query.html', current_mjd = get_mjd())
 
 
 #Formatter functions ?
