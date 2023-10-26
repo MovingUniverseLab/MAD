@@ -264,11 +264,9 @@ def get_moa_params(alert_dir, year, nn):
     meta = soup.find('div', id="metadata").text
     RA = meta.split('RA:')[1].split('Dec:')[0]
     Dec = meta.split('RA:')[1].split('Dec:')[1].split('Current')[0]
-
     c = SkyCoord(ra=RA, dec=Dec, unit=(u.hourangle, u.deg), frame='icrs')
     GC_b = c.galactic.b.degree
     GC_l = c.galactic.l.degree
-
 
     tmax_str = soup.find('div', id="lastphot").text.split('<td>=<td align=right>')[1]
     tmax = moa_str_to_float(tmax_str.split()[1])
@@ -287,7 +285,7 @@ def get_moa_params(alert_dir, year, nn):
     Ibase_e = moa_str_to_float(Ibase_str.split('<td>')[2].split()[0].split('<')[0])
 
     assessment = soup.find('div', id="metadata").find_all('td', align='right')[4].text
-    
+        
     return alert_name, RA, Dec, GC_b, GC_l, tmax, tmax_e, tE, tE_e, \
             u0, u0_e, Ibase, Ibase_e, assessment, url
     
@@ -550,9 +548,9 @@ def get_kmtnet_alerts(year):
         class_ = soup.find_all('td')[3::15][1:]
         RA = soup.find_all('td')[4::15][1:]
         Dec = soup.find_all('td')[5::15][1:]
-        c = SkyCoord(ra=RA, dec=Dec, unit=(u.hourangle, u.deg), frame='icrs')
+        '''c = SkyCoord(ra=RA, dec=Dec, unit=(u.hourangle, u.deg), frame='icrs')
         GC_b = c.galactic.b.degree
-        GC_l = c.galactic.l.degree
+        GC_l = c.galactic.l.degree'''
         t_0 = soup.find_all('td')[6::15][1:]
         t_E = soup.find_all('td')[7::15][1:]
         u_0 = soup.find_all('td')[8::15][1:]
@@ -564,9 +562,9 @@ def get_kmtnet_alerts(year):
         classAL = soup.find_all('td')[4::16][1:]
         RA = soup.find_all('td')[5::16][1:]
         Dec = soup.find_all('td')[6::16][1:]
-        c = SkyCoord(ra=RA, dec=Dec, unit=(u.hourangle, u.deg), frame='icrs')
+        '''c = SkyCoord(ra=RA, dec=Dec, unit=(u.hourangle, u.deg), frame='icrs')
         GC_b = c.galactic.b.degree
-        GC_l = c.galactic.l.degree
+        GC_l = c.galactic.l.degree'''
         t_0 = soup.find_all('td')[7::16][1:]
         t_E = soup.find_all('td')[8::16][1:]
         u_0 = soup.find_all('td')[9::16][1:]
@@ -579,6 +577,9 @@ def get_kmtnet_alerts(year):
     # Process output to get strings/floats as appropriate.
     RA_list = [item.get_text().replace(u'\xa0', u'') for item in RA]
     Dec_list = [item.get_text().replace(u'\xa0', u'') for item in Dec]
+    c = SkyCoord(ra=RA_list, dec=Dec_list, unit=(u.hourangle, u.deg), frame='icrs')
+    GC_b = c.galactic.b.degree
+    GC_l = c.galactic.l.degree
     t_0_list = [kmtnet_str_to_float(item) for item in t_0]
     t_E_list = [kmtnet_str_to_float(item) for item in t_E]
     u_0_list = [kmtnet_str_to_float(item) for item in u_0]
@@ -609,12 +610,12 @@ def get_kmtnet_alerts(year):
 
     if year in ['2023','2022', '2020', '2017', '2016']:
         # Put it all into a dataframe and write out to the database.
-        df = pd.DataFrame(list(zip(alert_name, RA_list, Dec_list, t_0_list, t_E_list, u_0_list, 
+        df = pd.DataFrame(list(zip(alert_name, RA_list, Dec_list, GC_b, GC_l, t_0_list, t_E_list, u_0_list,
                                    Isource_list, Ibase_list, class_list, alert_url_list)),
                          columns =['alert_name', 'RA', 'Dec', 'GC_b', 'GC_l', 't0', 'tE', 'u0',
                                    'Isrc', 'Ibase', 'class', 'alert_url'])
     elif year in ['2021', '2019', '2018']:
-        df = pd.DataFrame(list(zip(alert_name, RA_list, Dec_list, t_0_list, t_E_list, u_0_list, 
+        df = pd.DataFrame(list(zip(alert_name, RA_list, Dec_list, GC_b, GC_l, t_0_list, t_E_list, u_0_list,
                            Isource_list, Ibase_list, classEF_list, alert_url_list)),
                  columns =['alert_name', 'RA', 'Dec', 'GC_b', 'GC_l', 't0', 'tE', 'u0',
                            'Isrc', 'Ibase', 'class', 'alert_url'])
