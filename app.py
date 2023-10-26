@@ -15,6 +15,8 @@ import base64
 import numexpr as ne
 from flask import make_response
 from glob import glob
+from astropy.time import Time
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -24,6 +26,12 @@ if len(argv)==1:
     engine = create_engine('sqlite:///'+latest_db)
 else:
     engine = create_engine('sqlite:///microlensing'+argv[1]+'.db')
+
+#Gets current Modified Julian Date to be displayed on HTML homepage
+def get_mjd():
+    time = datetime.now().isoformat()
+    t = Time(time, format='isot')
+    return round(t.mjd, 2)
 
 @app.route('/', methods=['GET', 'POST'])
 def query_db():
