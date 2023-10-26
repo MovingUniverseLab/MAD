@@ -40,7 +40,7 @@ def get_moa_lightcurves(year):
     Outputs
     -------
     sqlite table called photometry in microlensing.db
-    Columns are hjd (HJD - 245000), mag, mag_err, alert_name, and telescope.
+    Columns are mjd, mag, mag_err, alert_name, and telescope.
     """
     # The delta flux measurements sometimes yield negative fluxes
     # after calibration. Ignore warnings so we don't have to deal
@@ -90,7 +90,7 @@ def get_moa_lightcurves(year):
         bytes_data = requests.get(url).content
         df = pd.read_csv(BytesIO(bytes_data), 
                          delim_whitespace=True, skiprows=11, skipfooter=1, header=None, engine='python', 
-                         names=['hjd', 'delta_flux', 'flux_err', 'foo1', 'foo2', 'foo3', 'foo4', 'foo5'])
+                         names=['mjd', 'delta_flux', 'flux_err', 'foo1', 'foo2', 'foo3', 'foo4', 'foo5'])
 
         # Add columns for magnitude and magnitude error, using the conversion
         # values we just figured out.
@@ -103,13 +103,13 @@ def get_moa_lightcurves(year):
         df['telescope'] = 'MOA'
         
         # Write HJD as HJD - 2450000 to match OGLE and KMTNet (less cumbersome digits)
-        df['hjd'] -= 2450000
+        df['hjd'] -= 2400000.5
 
         # Get rid of all the nans which crop up during the conversion from delta flux to magnitude.
         df.dropna(axis='index', how='any', inplace=True)
 
         # Write out the HJD, mag, mag_err, telescope, and alert_name data into the table.
-        cols = ['hjd', 'mag', 'mag_err', 'telescope', 'alert_name']
+        cols = ['mjd', 'mag', 'mag_err', 'telescope', 'alert_name']
         df[cols].to_sql(con=engine, schema=None, name="photometry", if_exists="append", index=False)
     t1 = time.time() 
     
@@ -152,7 +152,7 @@ def get_ogle_lightcurves(year):
             ftp.retrbinary('RETR phot.dat', flo.write)
             flo.seek(0)
             df = pd.read_fwf(flo, header=0, 
-                             names=['hjd', 'mag', 'mag_err', 'see', 'sky'], 
+                             names=['mjd', 'mag', 'mag_err', 'see', 'sky'], 
                              widths=[14, 7, 6, 5, 8])
 
             # Add a column for the alert name (of the form O[B/D/G]YYNNNN, YY=year, NNN=alert number)
@@ -161,10 +161,10 @@ def get_ogle_lightcurves(year):
             df['telescope'] = 'OGLE'
             
             # Write HJD as HJD - 2450000 (less cumbersome digits)
-            df['hjd'] -= 2450000
+            df['mjd'] -= 2400000.5
             
             # Write out the HJD, mag, mag_err, telescope, and alert_name data into the table.
-            cols = ['hjd', 'mag', 'mag_err', 'telescope', 'alert_name']
+            cols = ['mjd', 'mag', 'mag_err', 'telescope', 'alert_name']
             df[cols].to_sql(con=engine, schema=None, name="photometry", if_exists="append", index=False)
 
             ftp.cwd("../")
@@ -223,7 +223,7 @@ def get_kmtnet_lightcurves(year):
                 bytes_data = requests.get(url).content
                 df = pd.read_csv(BytesIO(bytes_data), 
                                  delim_whitespace=True, skiprows=1, header=None, 
-                                 names=['hjd', 'Delta_flux', 'flux_err', 'mag', 
+                                 names=['mjd', 'Delta_flux', 'flux_err', 'mag', 
                                         'mag_err', 'fwhm', 'sky', 'secz'])
 
                 # Add columns for the alert name (of the form KBYYNNNN, YY=year, NNNN=alert number)
@@ -232,10 +232,10 @@ def get_kmtnet_lightcurves(year):
                 df['telescope'] = pysis_name
                 
                 # Write HJD as HJD - 2450000 (less cumbersome digits)
-                df['hjd'] -= 2450000
+                df['mjd'] -= 2450000
 
                 # Write out the HJD, mag, mag_err, telescope, and alert_name data into the table.
-                cols = ['hjd', 'mag', 'mag_err', 'telescope', 'alert_name']
+                cols = ['mjd', 'mag', 'mag_err', 'telescope', 'alert_name']
                 df[cols].to_sql(con=engine, schema=None, name="photometry", 
                                 if_exists="append", index=False)
     t1 = time.time()             
@@ -341,7 +341,7 @@ def get_moa_alerts(year):
                                 'u0', 'u0_err', 'Ibase', 'Ibase_err', 'class', 'alert_url'])
     
     # Write HJD as HJD - 2450000 (less cumbersome digits)
-    df['t0'] -= 2450000
+    df['t0'] -= 2400000.5
     
     # Fill in the other columns
     df['Isrc'] = np.nan
@@ -501,7 +501,7 @@ def get_ogle_alerts(year):
     df['related_event'] = ''
     
     # Write HJD as HJD - 2450000 (less cumbersome digits)
-    df['t0'] -= 2450000
+    df['t0'] -= 2400000.5
 
     df.to_sql(con=engine, schema=None, name="alerts", if_exists="append", index=False)
     
