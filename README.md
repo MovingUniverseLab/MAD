@@ -1,6 +1,6 @@
 Microlensing Alert Database (MAD)
 
-Initially created as Spring 2022 Ay250 Final Project by Casey Lam (casey_lam@berkeley.edu), with revisions by Macy Huston
+Initially created by Casey Lam, further developed by Anette Brecko and Macy Huston
 
 # MAD 
 Microlensing Alerts Database (MAD) is a Flask webapp that allows the user to 
