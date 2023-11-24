@@ -17,6 +17,7 @@ from flask import make_response
 from glob import glob
 from astropy.time import Time
 from datetime import datetime
+import json
 
 app = Flask(__name__)
 
@@ -104,6 +105,18 @@ def download_csv(query_str):
     
     return resp
 
+@app.route('/download_json/<query_str>', methods=['GET', 'POST'])
+def download_json(query_str):
+    with engine.connect() as conn:
+        df = pd.read_sql(query_str, conn, columns=["alert_name", "RA", "DEC"])
+    ra = {}
+    dec = {}
+    for i in df.index: 
+        ra.update({df["alert_name"][i]: df["RA"][i]})
+        dec.update({df["alert_name"][i]: df["DEC"][i]})
+    dict = {'ra': ra, 'dec': dec}
+    json_object = json.dumps(dict, indent=2)
+    open("query_output.json", 'w').write(json_object)
 
 @app.route('/browse_lightcurves', methods=['GET', 'POST'])
 def browse_lightcurves():
