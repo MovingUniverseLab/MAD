@@ -9,7 +9,7 @@
 
 <p>
   Today's Modified Julian Date is: {{ current_mjd }} <br>
-  Default SQL query: SELECT * FROM alerts WHERE ABS(GC_b)<10 AND (tE>=100 OR t0>{{current_mjd}}) AND t0>=({{current_mjd}} - 14) AND Ibase<20 ORDER BY t0_err, tE_err ASC <br>
+  Default SQL query: SELECT * FROM alerts WHERE ABS(GC_b)<10 AND tE>=100 AND t0>=({{current_mjd}} - 14) AND Ibase<20 ORDER BY t0_err, tE_err ASC <br>
   <b>Enter SQL query or select desired parameters from default query:</b><br>
 </p>
 
@@ -23,7 +23,7 @@
   <input type="checkbox" id="gc_b" name="default_query" value="ABS(GC_b)<10">
   <label for="gc_b">ABS(GC_b)<10</label><br>
   <input type="checkbox" id="peak_time" name="default_query" value="(tE>=100 OR t0>{{current_mjd}})">
-  <label for="peak_time">(tE>=100 OR t0>{{current_mjd}})</label><br>
+  <label for="peak_time">tE>=100</label><br>
   <input type="checkbox" id="within_2_weeks" name="default_query" value="t0>=({{current_mjd}} - 14)">
   <label for="within_2_weeks">t0>=({{current_mjd}} - 14)</label><br>
   <input type="checkbox" id="magnitude" name="default_query" value="Ibase<20">
