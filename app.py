@@ -18,6 +18,7 @@ from glob import glob
 from astropy.time import Time
 from datetime import datetime
 import json
+import fitting_utils
 
 app = Flask(__name__)
 
@@ -109,11 +110,26 @@ def download_csv(query_str):
 def download_json(query_str):
     with engine.connect() as conn:
         df = pd.read_sql(query_str, conn, columns=["alert_name", "RA", "DEC"])
+    name_list = df['alert_name'].squeeze().to_list()
+    ra_list = df['RA'].squeeze().to_list()
+    dec_list = df['DEC'].squeeze().to_list()
     ra = {}
     dec = {}
-    for i in df.index: 
-        ra.update({df["alert_name"][i]: df["RA"][i]})
-        dec.update({df["alert_name"][i]: df["DEC"][i]})
+    moa_alerts = []
+    kmt_alerts = []
+    ogle_alerts = []
+    for i in range(len(ra_list)): 
+        ra.update({name_list[i]: ra_list[i]})
+        dec.update({name_list[i]: dec_list[i]})
+        if "OB" in name_list[i]:
+            ogle_alerts.append(name_list[i])
+        if "MB" in name_list[i]:
+            moa_alerts.append(name_list[i])
+        if "KB" in name_list[i]:
+            kmt_alerts.append(name_list[i])
+    fitting_utils.moa_lightcurves_from_list(moa_alerts)
+    fitting_utils.kmt_lightcurves_from_list(kmt_alerts)
+    fitting_utils.ogle_lightcurves_from_list(ogle_alerts)
     dict = {'ra': ra, 'dec': dec}
     json_object = json.dumps(dict, indent=2)
     open("query_output.json", 'w').write(json_object)
