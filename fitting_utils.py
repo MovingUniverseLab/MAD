@@ -1,6 +1,7 @@
 import json
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
+import time
 
 def moa_lightcurves_from_list(list):
     #Download lightcurves from MOA website only for events in list, using code from query_alerts
@@ -22,6 +23,7 @@ def kmt_lightcurves_from_list(list):
     response.close()
     soup = BeautifulSoup(html,"html.parser")
     nobj = len(soup.find_all('td')[0::15][1:])
+    t0 = time.time()
 
 def ogle_lightcurves_from_list(list):
     #Download lightcurves from OGLE website only for events in list, using code from query_alerts
