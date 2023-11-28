@@ -19,7 +19,7 @@
 </form>
 
 <form method=post enctype=multipart/form-data>
-  WHERE<br>
+  SELECT * FROM alerts WHERE<br>
   <input type="checkbox" id="gc_b" name="default_query" value="ABS(GC_b)<10">
   <label for="gc_b">ABS(GC_b)<10</label><br>
   <input type="checkbox" id="peak_time" name="default_query" value="(tE>=100 OR t0>{{current_mjd}})">
