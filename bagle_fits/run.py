@@ -31,7 +31,7 @@ def run_bagle(target, phot_data, modstr):
     os.makedirs(outdir, exist_ok=True)
 
     fitter = model_fitter.PSPL_Solver(data,
-                                      model.PSPL_Phot_Par_Param1,
+                                      model.PSPL_Phot_Par_Param2,
                                       importance_nested_sampling = False,
                                       n_live_points = 400,
                                       evidence_tolerance = 0.5,
@@ -42,11 +42,11 @@ def run_bagle(target, phot_data, modstr):
     fitter.priors['t0'] = model_fitter.make_gen(*priors['t0'])
     fitter.priors['u0_amp'] = model_fitter.make_gen(-1.0, 1.0)
     fitter.priors['tE'] = model_fitter.make_gen(*priors['tE'])
-    fitter.priors['piE_E'] = model_fitter.make_gen(-1, 1)
-    fitter.priors['piE_N'] = model_fitter.make_gen(-1, 1)
-    fitter.priors['b_sff1'] = model_fitter.make_gen(*priors['srcfrac'])
+    fitter.priors['piE_E'] = model_fitter.make_gen(-0.5, 0.5)
+    fitter.priors['piE_N'] = model_fitter.make_gen(-0.5, 0.5)
+    fitter.priors['b_sff1'] = model_fitter.make_gen(0.0,1.05)
     #fitter.priors['b_sff2'] = model_fitter.make_gen(0, 1.01)
-    fitter.priors['mag_src1'] = model_fitter.make_gen(*priors['Isrc'])
+    fitter.priors['mag_base1'] = model_fitter.make_gen(*priors['Ibase'])
     #fitter.priors['mag_src2'] = model_fitter.make_gen(18, 21)
 
     ##########
@@ -97,4 +97,9 @@ def run_all():
     for target in target_list:
         run_bagle(target, list(query_output['data_sets'][target].keys()), modstr)
 
-run_all()
+def run_one(target):
+    modstr = 'pspl_phot_par'
+    query_output = json.load(open('query_output.json'))
+    run_bagle(target, list(query_output['data_sets'][target].keys()), modstr)
+
+#run_all()

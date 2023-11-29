@@ -14,10 +14,10 @@ from astropy import time as atime, coordinates as coord, units as u
 #import time
 #import pickle
 #import pdb
-#import os
+import os
 import json
 
-mad_dir = '/u/mhuston/code/MAD/'
+mad_dir = os.getcwd()+'/' #'/u/mhuston/code/MAD/'
 data = json.load(open(mad_dir+'query_output.json'))
 
 ra = data['ra']
@@ -50,34 +50,12 @@ def getpriors(target):
     priorkeys = ['t0', 'tE', 'Isrc', 'srcfrac']
     priors = {}
 
-    if alertfit['t0_err'] is None:
-        priors['t0'] = [alertfit['t0'] - alertfit['tE']/2, alertfit['t0'] + alertfit['tE']/2]
-    else:
-        use_t0_err = max(alertfit['t0_err']*3, 7)
-        priors['t0'] = [alertfit['t0'] - use_t0_err, alertfit['t0'] + use_t0_err]
-        
-    if alertfit['tE_err'] is None:
-        priors['tE'] = [1, alertfit['tE'] + alertfit['tE']/2]
-    else:
-        use_tE_err = max(alertfit['tE_err']*3, 7)
-        priors['tE'] = [1, alertfit['tE'] + use_tE_err]
-
-
-    # If provided Isrc & Isrc_err, and Ibase & Ibase_err
-    if not (alertfit['Isrc'] is None or alertfit['Isrc_err'] is None or alertfit['Ibase'] is None or alertfit['Ibase_err'] is None):
-        use_Ibase_err = max(alertfit['Ibase_err']*3, 0.5)
-        use_Isrc_err = max(alertfit['Isrc_err']*3, 0.5)
-        priors['Isrc'] = [alertfit['Ibase'] - use_Ibase_err, alertfit['Isrc'] + use_Isrc_err]
-    # If provided Isrc and Ibase but not errors
-    elif alertfit['Isrc_err'] is None or alertfit['Ibase_err'] is None:
-        priors['Isrc'] = [alertfit['Ibase'] - 1, alertfit['Isrc'] + 1]
-    # If provided Ibase & Ibase_err but no Isrc info
-    else:
-        use_Ibase_err = max(alertfit['Ibase_err']*3, 0.5)
-        priors['Isrc'] = [alertfit['Ibase'] - use_Ibase_err, alertfit['Ibase'] + 3]
+    priors['t0'] = [alertfit['t0'] - alertfit['tE']/2, alertfit['t0'] + alertfit['tE']/2]
+    priors['tE'] = [alertfit['tE'] - alertfit['tE']/2, alertfit['tE'] + alertfit['tE']/2]
+    priors['Ibase'] = [alertfit['Ibase'] - 0.2, alertfit['Isrc'] + 0.2]
 
     # Don't put real limits on blending
-    priors['srcfrac'] = [0.001,1.05]
+    #priors['srcfrac'] = [0.001,1.05]
 
     print(priors)
     return priors
