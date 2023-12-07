@@ -106,7 +106,7 @@ def download_csv(query_str):
     
     return resp
 
-@app.route('/download_json/<query_str>', methods=['GET', 'POST'])
+@app.route('/json.html/<json_object>', methods=['GET', 'POST'])
 def download_json(query_str):
     with engine.connect() as conn:
         df = pd.read_sql(query_str, conn, columns=["alert_name", "RA", "DEC"])
@@ -127,12 +127,13 @@ def download_json(query_str):
             moa_alerts.append(name_list[i])
         if "KB" in name_list[i]:
             kmt_alerts.append(name_list[i])
-    fitting_utils.moa_lightcurves_from_list(moa_alerts)
-    fitting_utils.kmt_lightcurves_from_list(kmt_alerts)
-    fitting_utils.ogle_lightcurves_from_list(ogle_alerts)
+    #fitting_utils.moa_lightcurves_from_list(moa_alerts)
+    #fitting_utils.kmt_lightcurves_from_list(kmt_alerts)
+    #fitting_utils.ogle_lightcurves_from_list(ogle_alerts)
     dict = {'ra': ra, 'dec': dec}
     json_object = json.dumps(dict, indent=2)
-    open("query_output.json", 'w').write(json_object)
+    #open("query_output.json", 'w').write(json_object)
+    return render_template('json.html', json_object=json_object)
 
 @app.route('/browse_lightcurves', methods=['GET', 'POST'])
 def browse_lightcurves():
