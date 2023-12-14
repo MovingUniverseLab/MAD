@@ -99,7 +99,7 @@ def download_csv(query_str):
     give you the column names.
     """
     with engine.connect() as conn:
-        df = pd.read_sql(query_str, conn)
+        df = pd.read_sql(text(query_str), conn)
     resp = make_response(df.to_csv())
     resp.headers["Content-Disposition"] = "attachment; filename=export.csv"
     resp.headers["Content-Type"] = "text/csv"
@@ -109,7 +109,7 @@ def download_csv(query_str):
 @app.route('/json.html/<json_object>', methods=['GET', 'POST'])
 def download_json(query_str):
     with engine.connect() as conn:
-        df = pd.read_sql(query_str, conn, columns=["alert_name", "RA", "DEC"])
+        df = pd.read_sql(text(query_str), conn, columns=["alert_name", "RA", "DEC"])
     name_list = df['alert_name'].squeeze().to_list()
     ra_list = df['RA'].squeeze().to_list()
     dec_list = df['DEC'].squeeze().to_list()
@@ -134,7 +134,8 @@ def download_json(query_str):
     json_object = json.dumps(dict, indent=2)
     #open("query_output.json", 'w').write(json_object)
     return render_template('json.html', json_object=json_object)
-
+    
+    
 @app.route('/browse_lightcurves', methods=['GET', 'POST'])
 def browse_lightcurves():
     """
@@ -305,4 +306,4 @@ def create_figure(time, mag, mag_err, alert_name):
 
 
 if __name__ == '__main__':
-    app.run(port=8000, debug = True)
+    app.run(port=8003, debug = True)
