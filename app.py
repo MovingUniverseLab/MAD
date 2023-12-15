@@ -73,6 +73,7 @@ def query_db():
                                    query_str=query_str,
                                     html_table=df_html,        
                                    download_csv=url_for('download_csv', query_str=query_str),
+                                   download_json=url_for('download_json', query_str=query_str),
                                    browse_lc=browse_lc,
                                    browse_lightcurves=url_for('browse_lightcurves'))
         
@@ -106,13 +107,13 @@ def download_csv(query_str):
     
     return resp
 
-@app.route('/json.html/<json_object>', methods=['GET', 'POST'])
+@app.route('/download_json/<query_str>', methods=['GET', 'POST'])
 def download_json(query_str):
     with engine.connect() as conn:
-        df = pd.read_sql(text(query_str), conn, columns=["alert_name", "RA", "DEC"])
+        df = pd.read_sql(text(query_str), conn, columns=["alert_name", "RA", "Dec"])
     name_list = df['alert_name'].squeeze().to_list()
     ra_list = df['RA'].squeeze().to_list()
-    dec_list = df['DEC'].squeeze().to_list()
+    dec_list = df['Dec'].squeeze().to_list()
     ra = {}
     dec = {}
     moa_alerts = []
@@ -306,4 +307,4 @@ def create_figure(time, mag, mag_err, alert_name):
 
 
 if __name__ == '__main__':
-    app.run(port=8003, debug = True)
+    app.run(port=8000, debug = True)
