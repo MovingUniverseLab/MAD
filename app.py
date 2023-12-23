@@ -122,7 +122,7 @@ def download_json(query_str):
     for i in range(len(ra_list)): 
         ra.update({name_list[i]: ra_list[i]})
         dec.update({name_list[i]: dec_list[i]})
-        if "OB" in name_list[i]:
+        if "OB" or "OD" or "OG" in name_list[i]:
             ogle_alerts.append(name_list[i])
         if "MB" in name_list[i]:
             moa_alerts.append(name_list[i])
