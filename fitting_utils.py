@@ -67,9 +67,9 @@ def moa_lightcurves_from_list(list):
         cols = ['mjd', 'mag', 'mag_err']
         
         #Download dataframe object as a csv file to the MOA specific folder within MAD
-        file_path = Path('MAD/MOA_lightcurves/' + alert_name + '.csv')  
+        file_path = Path('MAD/lightcurves/moa/' + alert_name + '.csv')  
         file_path.parent.mkdir(parents=True, exist_ok=True)
-        df.to_csv(file_path, index=False)
+        df[cols].to_csv(file_path, index=False)
 
 
 def kmt_lightcurves_from_list(list):
