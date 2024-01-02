@@ -25,7 +25,7 @@ def moa_lightcurves_from_list(list):
     for ii, link in enumerate(links):
         if 'BLG' in link.text:
             #Getting the number of the alert, adding to alert_dirs only if it's in the list input to the function
-            alert_num = link.text[(link.text.length)-3]
+            alert_num = link.text[len(link.text)-3]
             if any(alert_num in x for x in list):
                 alert_dirs.append(links[ii]['href'])
     for nn, alert_dir in enumerate(alert_dirs):
