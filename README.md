@@ -70,8 +70,7 @@ Each row in the `photometry` table also contains the date, magnitude, magnitude 
 and telescope information for each observation.
 
 ### Future work - simpler items
-1. Save fewer decimals for some of the numbers in the table (like HJD or mag).
-2. Figure out why populate_database currently only runs in ipython, not command line.
+1. Figure out why populate_database currently only runs in ipython, not command line.
 
 ### Future work - potential complex items
 1. Parallelize lightcurve download (currently ~1 hour for each alert system year). 
