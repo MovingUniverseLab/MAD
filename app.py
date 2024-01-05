@@ -111,9 +111,18 @@ def download_csv(query_str):
 def download_json(query_str):
     with engine.connect() as conn:
         df = pd.read_sql(text(query_str), conn, columns=["alert_name", "RA", "Dec"])
-    name_list = df['alert_name'].squeeze().to_list()
-    ra_list = df['RA'].squeeze().to_list()
-    dec_list = df['Dec'].squeeze().to_list()
+
+    #Accounting for the JSON file failing to download when it only has one event
+    if (len(df)) == 1:
+        name_list = df.at[0, 'alert_name']
+        ra_list = df.at[0, 'RA']
+        dec_list = df.at[0, 'Dec']
+
+    else:
+        name_list = df['alert_name'].squeeze().to_list()
+        ra_list = df['RA'].squeeze().to_list()
+        dec_list = df['Dec'].squeeze().to_list()
+        
     ra = {}
     dec = {}
     moa_alerts = []
