@@ -66,7 +66,7 @@ def moa_lightcurves_from_list(moa_list):
             cols = ['mjd', 'mag', 'mag_err']
             
             #Download dataframe object as a csv file to the MOA specific folder within MAD
-            path = 'lightcurves/moa/' + alert_name + '.csv'
+            path = 'lightcurves/MOA/' + alert_name + '.csv'
             file_dirs[alert_name] = path
             file_path = Path(path)
             file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -92,3 +92,31 @@ def ogle_lightcurves_from_list(ogle_list):
     ftp = ftplib.FTP("ftp.astrouw.edu.pl")
     ftp.login()
     ftp.cwd("ogle/ogle4/ews/" + year + "/")
+    prefs = ['blg','dg','gd']
+    nobjs = [int(sum(pref in x for x in ftp.nlst())/2) for pref in prefs]
+    file_dirs = {}
+    for i_pref, pref in enumerate(prefs):
+        for nn in np.arange(start=1, stop=nobjs[i_pref]+1, step=1):
+            alert_name = 'O' + pref[0].upper() + year[2:] + str(nn).zfill(4)
+            if alert_name in ogle_list:
+                # Grab the photometry for each alert.
+                ftp.cwd(pref+"-" + str(nn).zfill(4))
+                
+                flo = BytesIO()
+                ftp.retrbinary('RETR phot.dat', flo.write)
+                flo.seek(0)
+                df = pd.read_fwf(flo, header=0, 
+                                 names=['mjd', 'mag', 'mag_err', 'see', 'sky'], 
+                                 widths=[14, 7, 6, 5, 8])
+                df['mjd'] -= 2400000.5
+                cols = ['mjd', 'mag', 'mag_err']
+
+                #Download dataframe object as a csv file to the MOA specific folder within MAD
+                path = 'lightcurves/OGLE/' + alert_name + '.csv'
+                file_dirs[alert_name] = path
+                file_path = Path(path)
+                file_path.parent.mkdir(parents=True, exist_ok=True)
+                df[cols].to_csv(file_path, index=False)
+
+                ftp.cwd("../")
+    return file_dirs
