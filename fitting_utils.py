@@ -73,6 +73,9 @@ def moa_lightcurves_from_list(moa_list):
             df[cols].to_csv(file_path, index=False)
 
     return file_dirs
+    \
+
+
 
 
 def kmt_lightcurves_from_list(kmt_list):
@@ -84,7 +87,45 @@ def kmt_lightcurves_from_list(kmt_list):
     response.close()
     soup = BeautifulSoup(html,"html.parser")
     nobj = len(soup.find_all('td')[0::15][1:])
-    t0 = time.time()
+    file_dirs = {}
+    for nn in np.arange(start=1, stop=nobj+1, step=1):
+        url = "https://kmtnet.kasi.re.kr/~ulens/event/" + year + \
+                "/view.php?event=KMT-" + year + "-BLG-" + str(nn).zfill(4)
+        response = urlopen(url)
+        html = response.read()
+        response.close()
+        soup = BeautifulSoup(html,"html.parser")
+
+        # Get the names of all the different lightcurve files (pysis names).
+        links = soup.find_all('a', href=True)
+        pysis_names = links[3].get_text(separator=',').split(',')[:-2]
+        
+        # Note, we are only keeping I-band lightcurves (V-band ones are not useful). 
+        for pysis_name in pysis_names:
+            if '_I.pysis' in pysis_name:
+                alert_name = 'KB' + year[2:] + str(nn).zfill(4)
+                if alert_name in kmt_list:
+                    # Grab the photometry for each alert's I-band lightcurve data into a pands dataframe.
+                    url = "https://kmtnet.kasi.re.kr/~ulens/event/" + year + "/data/KB" + \
+                            year[2:] + str(nn).zfill(4) + "/pysis/" + pysis_name
+
+                    bytes_data = requests.get(url).content
+                    df = pd.read_csv(BytesIO(bytes_data), 
+                                     delim_whitespace=True, skiprows=1, header=None, 
+                                     names=['mjd', 'Delta_flux', 'flux_err', 'mag', 
+                                            'mag_err', 'fwhm', 'sky', 'secz'])
+                    df['mjd'] -= 2450000
+
+                    # Write out the HJD, mag, mag_err, telescope, and alert_name data into the table.
+                    cols = ['mjd', 'mag', 'mag_err']
+
+                    #Download dataframe object as a csv file to the MOA specific folder within MAD
+                    path = 'lightcurves/MOA/' + alert_name + '.csv'
+                    file_dirs[alert_name] = path
+                    file_path = Path(path)
+                    file_path.parent.mkdir(parents=True, exist_ok=True)
+                    df[cols].to_csv(file_path, index=False)
+    return file_dirs
 
 def ogle_lightcurves_from_list(ogle_list):
     #Download lightcurves from OGLE website only for events in list, using code from query_alerts

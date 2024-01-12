@@ -138,9 +138,9 @@ def download_json(query_str):
         if "KB" in name_list[i]:
             kmt_alerts.append(name_list[i])
     moa_lightcurves = fitting_utils.moa_lightcurves_from_list(moa_alerts)
-    #fitting_utils.kmt_lightcurves_from_list(kmt_alerts)
+    kmt_lightcurves = fitting_utils.kmt_lightcurves_from_list(kmt_alerts)
     ogle_lightcurves = fitting_utils.ogle_lightcurves_from_list(ogle_alerts)
-    dict = {'ra': ra, 'dec': dec, 'photom_moa': moa_lightcurves, 'photom_ogle' : ogle_lightcurves}
+    dict = {'ra': ra, 'dec': dec, 'photom_moa': moa_lightcurves, 'photom_kmt' : kmt_lightcurves, 'photom_ogle' : ogle_lightcurves}
     json_object = json.dumps(dict, indent=2)
     open("query_output.json", 'w').write(json_object)
     return render_template('json.html', json_object=json_object)
