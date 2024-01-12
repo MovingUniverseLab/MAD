@@ -25,6 +25,7 @@ def moa_lightcurves_from_list(moa_list):
     for ii, link in enumerate(links):
         if 'BLG' in link.text:
             alert_dirs.append(links[ii]['href'])
+    file_dirs = {}
     for nn, alert_dir in enumerate(alert_dirs):
         # Scrape the page.
         alert_name = 'MB' + year[2:] + str(nn + 1).zfill(3)
@@ -65,9 +66,13 @@ def moa_lightcurves_from_list(moa_list):
             cols = ['mjd', 'mag', 'mag_err']
             
             #Download dataframe object as a csv file to the MOA specific folder within MAD
-            file_path = Path('lightcurves/moa/' + alert_name + '.csv')  
+            path = 'lightcurves/moa/' + alert_name + '.csv'
+            file_dirs[alert_name] = path
+            file_path = Path(path)
             file_path.parent.mkdir(parents=True, exist_ok=True)
             df[cols].to_csv(file_path, index=False)
+
+    return file_dirs
 
 
 def kmt_lightcurves_from_list(kmt_list):
