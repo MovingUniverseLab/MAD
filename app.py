@@ -137,7 +137,7 @@ def download_json(query_str):
             moa_alerts.append(name_list[i])
         if "KB" in name_list[i]:
             kmt_alerts.append(name_list[i])
-    #fitting_utils.moa_lightcurves_from_list(moa_alerts)
+    moa_lightcurves = fitting_utils.moa_lightcurves_from_list(moa_alerts)
     #fitting_utils.kmt_lightcurves_from_list(kmt_alerts)
     #fitting_utils.ogle_lightcurves_from_list(ogle_alerts)
     dict = {'ra': ra, 'dec': dec}
