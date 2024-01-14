@@ -114,15 +114,15 @@ def download_json(query_str):
 
     #Accounting for the JSON file failing to download when it only has one event
     if (len(df)) == 1:
-        name_list = df.at[0, 'alert_name']
-        ra_list = df.at[0, 'RA']
-        dec_list = df.at[0, 'Dec']
+        name_list = list(df.at[0, 'alert_name'])
+        ra_list = list(df.at[0, 'RA'])
+        dec_list = list(df.at[0, 'Dec'])
 
     else:
         name_list = df['alert_name'].squeeze().to_list()
         ra_list = df['RA'].squeeze().to_list()
         dec_list = df['Dec'].squeeze().to_list()
-        
+
     ra = {}
     dec = {}
     moa_alerts = []
