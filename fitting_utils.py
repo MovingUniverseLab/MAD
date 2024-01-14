@@ -11,6 +11,8 @@ import ftplib
 from pathlib import Path
 
 def moa_lightcurves_from_list(moa_list):
+    if len(moa_list) == 0:
+        return {}
     #Download lightcurves from MOA website only for events in list, using code from query_alerts
     year = "20" + str(moa_list[0][2:4])
     import warnings
@@ -73,12 +75,12 @@ def moa_lightcurves_from_list(moa_list):
             df[cols].to_csv(file_path, index=False)
 
     return file_dirs
-    \
-
 
 
 
 def kmt_lightcurves_from_list(kmt_list):
+    if len(kmt_list) == 0:
+        return {}
     #Download lightcurves from KMTNet website only for events in list, using code from query_alerts
     year = "20" + str(kmt_list[0][2:4])  
     url = "https://kmtnet.kasi.re.kr/~ulens/event/" + year + "/"
@@ -120,7 +122,7 @@ def kmt_lightcurves_from_list(kmt_list):
                     cols = ['mjd', 'mag', 'mag_err']
 
                     #Download dataframe object as a csv file to the MOA specific folder within MAD
-                    path = 'lightcurves/MOA/' + alert_name + '.csv'
+                    path = 'lightcurves/KMTNet/' + alert_name + '.csv'
                     file_dirs[alert_name] = path
                     file_path = Path(path)
                     file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -128,6 +130,8 @@ def kmt_lightcurves_from_list(kmt_list):
     return file_dirs
 
 def ogle_lightcurves_from_list(ogle_list):
+    if len(ogle_list) == 0:
+        return {}
     #Download lightcurves from OGLE website only for events in list, using code from query_alerts
     year = "20" + str(ogle_list[0][2:4])
     ftp = ftplib.FTP("ftp.astrouw.edu.pl")
