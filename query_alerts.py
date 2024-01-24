@@ -335,7 +335,7 @@ def get_moa_alerts(year):
     
     # Put it all into a dataframe and write out to the database.
     df = pd.DataFrame(parallel_results,
-                     columns = ['alert_name', 'RA', 'Dec', 'b', 'l', 't0', 't0_err', 'tE', 'tE_err', 
+                     columns = ['alert_name', 'RA', 'Dec', 'l', 'b', 't0', 't0_err', 'tE', 'tE_err', 
                                 'u0', 'u0_err', 'Ibase', 'Ibase_err', 'class', 'alert_url'])
     
     # Write HJD as HJD - 2450000 (less cumbersome digits)
@@ -424,7 +424,7 @@ def get_ogle_params(year, nn, reg):
     I0 = ogle_str_to_float(param_list, 31)
     I0_e =  ogle_str_to_float(param_list, 33)
 
-    return alert_name, RA, Dec, b, l, Tmax, Tmax_e, tau, tau_e, Umin, Umin_e, \
+    return alert_name, RA, Dec, l, b, Tmax, Tmax_e, tau, tau_e, Umin, Umin_e, \
             fbl, fbl_e, Ibl, Ibl_e, I0, I0_e, url
 
 def ogle_str_to_float(list_in, idx):
@@ -491,7 +491,7 @@ def get_ogle_alerts(year):
 
     # Put it all into a dataframe and write out to the database.
     df = pd.DataFrame(parallel_results,
-                     columns =['alert_name', 'RA', 'Dec', 'b', 'l', 't0', 't0_err', 'tE', 'tE_err', 'u0', 'u0_err', 
+                     columns =['alert_name', 'RA', 'Dec', 'l', 'b', 't0', 't0_err', 'tE', 'tE_err', 'u0', 'u0_err', 
                                'srcfrac', 'srcfrac_err', 'Ibase', 'Ibase_err', 'Isrc', 'Isrc_err', 'alert_url'])
 
     # Add in missing columns
@@ -610,14 +610,14 @@ def get_kmtnet_alerts(year):
 
     if year in ['2023','2022', '2020', '2017', '2016']:
         # Put it all into a dataframe and write out to the database.
-        df = pd.DataFrame(list(zip(alert_name, RA_list, Dec_list, b, l, t_0_list, t_E_list, u_0_list,
+        df = pd.DataFrame(list(zip(alert_name, RA_list, Dec_list, l, b, t_0_list, t_E_list, u_0_list,
                                    Isource_list, Ibase_list, class_list, alert_url_list)),
-                         columns =['alert_name', 'RA', 'Dec', 'b', 'l', 't0', 'tE', 'u0',
+                         columns =['alert_name', 'RA', 'Dec', 'l', 'b', 't0', 'tE', 'u0',
                                    'Isrc', 'Ibase', 'class', 'alert_url'])
     elif year in ['2021', '2019', '2018']:
-        df = pd.DataFrame(list(zip(alert_name, RA_list, Dec_list, b, l, t_0_list, t_E_list, u_0_list,
+        df = pd.DataFrame(list(zip(alert_name, RA_list, Dec_list, l, b, t_0_list, t_E_list, u_0_list,
                            Isource_list, Ibase_list, classEF_list, alert_url_list)),
-                 columns =['alert_name', 'RA', 'Dec', 'b', 'l', 't0', 'tE', 'u0',
+                 columns =['alert_name', 'RA', 'Dec', 'l', 'b', 't0', 'tE', 'u0',
                            'Isrc', 'Ibase', 'class', 'alert_url'])
      
     df['t0_err'] = np.nan

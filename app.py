@@ -16,7 +16,7 @@ import numexpr as ne
 from flask import make_response
 from glob import glob
 from astropy.time import Time
-from datetime import datetime
+from datetime import date, datetime
 import json
 import fitting_utils
 
@@ -142,7 +142,7 @@ def download_json(query_str):
     ogle_lightcurves = fitting_utils.ogle_lightcurves_from_list(ogle_alerts)
     dict = {'ra': ra, 'dec': dec, 'photom_moa': moa_lightcurves, 'photom_kmt' : kmt_lightcurves, 'photom_ogle' : ogle_lightcurves}
     json_object = json.dumps(dict, indent=2)
-    open("query_output.json", 'w').write(json_object)
+    open('query_output_' + str(date.today()) + '.json', 'w').write(json_object)
     return render_template('json.html', json_object=json_object)
     
     

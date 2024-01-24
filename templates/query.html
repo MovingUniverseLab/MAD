@@ -9,12 +9,12 @@
 
 <p>
   Today's Modified Julian Date is: {{ current_mjd }} <br>
-  Default SQL query: SELECT * FROM alerts WHERE ABS(GC_b)<10 AND tE>=100 AND t0>=({{current_mjd}} - 14) AND Ibase<20 ORDER BY t0_err, tE_err ASC
+  Default SQL query: SELECT * FROM alerts WHERE ABS(b)<10 AND tE>=100 AND t0>=({{current_mjd}} - 14) AND Ibase<20 ORDER BY t0_err, tE_err ASC
 </p>
 
 <form method=post enctype=multipart/form-data>
   SQL query:
-  <input type=text name=query size=100 value="SELECT * FROM alerts WHERE ABS(GC_b)<10 AND tE>=100 AND t0>=({{current_mjd}} - 14) AND Ibase<20 ORDER BY t0_err, tE_err ASC"><br><br>
+  <input type=text name=query size=100 value="SELECT * FROM alerts WHERE ABS(b)<10 AND tE>=100 AND t0>=({{current_mjd}} - 14) AND Ibase<20 ORDER BY t0_err, tE_err ASC"><br><br>
 </form>
 
 <p>
@@ -38,12 +38,12 @@
       <td>J2000.0</td>
     </tr>
     <tr>
-      <td>b</td>
-      <td>Galactic latitude</td>
-    </tr>
-    <tr>
       <td>l</td>
       <td>Galactic longitude</td>
+    </tr>
+    <tr>
+      <td>b</td>
+      <td>Galactic latitude</td>
     </tr>
     <tr>
       <td>t0, t0_err</td>

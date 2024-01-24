@@ -11,7 +11,7 @@ import os
 import sys
 import pylab as plt
 import numpy as np
-from datetime import datetime
+from datetime import date, datetime
 import json
 
 def run_bagle(target, phot_data, modstr):
@@ -92,14 +92,14 @@ def run_bagle(target, phot_data, modstr):
 def run_all():
     # Get required inputs for fit
     modstr = 'pspl_phot_par'
-    query_output = json.load(open('query_output.json'))
+    query_output = json.load(open('query_output_' + str(date.today()) + '.json'))
     target_list = list(query_output['ra'].keys())
     for target in target_list:
         run_bagle(target, list(query_output['data_sets'][target].keys()), modstr)
 
 def run_one(target):
     modstr = 'pspl_phot_par'
-    query_output = json.load(open('query_output.json'))
+    query_output = json.load(open('query_output_' + str(date.today()) + '.json'))
     run_bagle(target, list(query_output['data_sets'][target].keys()), modstr)
 
 #run_all()
