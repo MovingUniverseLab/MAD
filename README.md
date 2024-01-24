@@ -10,9 +10,7 @@ interact with a database of event parameters and lightcurves from the
 [KMTNet](https://kmtnet.kasi.re.kr/~ulens/)
 microlensing alert websites.
 
-With MAD, the user can query the database and download the results as a CSV file.
-
-In addition, the user can query the database to choose lightcurves to view.
+With MAD, the user can query the database and download the results as a CSV file or JSON file.
 
 ### Background and motivation:
 Our research group is looking for isolated stellar mass black holes with microlensing.
