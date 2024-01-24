@@ -69,17 +69,7 @@ In the `photometry` table, `alert_name` is the foreign key.
 Each row in the `photometry` table also contains the date, magnitude, magnitude uncertainty, 
 and telescope information for each observation.
 
-### Future work - simpler items
+### Future work
 1. Figure out why populate_database currently only runs in ipython, not command line.
-
-### Future work - potential complex items
-1. Parallelize lightcurve download (currently ~1 hour for each alert system year). 
-Need to figure out parallel writing to SQL database (is that allowed) as well as
-how to parallelize ftp downloads.
-2. Implementing some automated way of updating the database.
-(See notes from meeting with Josh.)
-3. Add unit tests.
-4. Better error handling (e.g. if you put in an invalid SQL query, right now,
-the Flask app will just fail-- ideally, it should bring you to a page that 
-explains why the error exists, then prompts you for another query). 
-5. Caching or some way to make the lightcurve viewing faster.
+2. Parallelize lightcurve download
+3. Automating the database updating via CronJob
