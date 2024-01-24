@@ -57,7 +57,7 @@ they are particularly interested in.
 4. `fitting_utils.py`.
 This module is called from app.py when the output database
 is downloaded as a JSON file, and it downloads the lightcurve of each event
-5. `run.py` in bagle_fits folder. <br />
+5. `run.py` in `bagle_fits` folder. <br />
 Takes the JSON file from the output database and feeds it as in input
 into Bayesian Analysis of Gravitational Lensing Events (BAGLE)
 6. `mad_munge.py`.
