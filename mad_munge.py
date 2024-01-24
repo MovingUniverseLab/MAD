@@ -15,10 +15,11 @@ from astropy import time as atime, coordinates as coord, units as u
 #import pickle
 #import pdb
 import os
+from datetime import date
 import json
 
 mad_dir = os.getcwd()+'/' #'/u/mhuston/code/MAD/'
-data = json.load(open(mad_dir+'query_output.json'))
+data = json.load(open(mad_dir+'query_output_' + str(date.today()) + '.json'))
 
 ra = data['ra']
 dec = data['dec']
