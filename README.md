@@ -56,6 +56,16 @@ and lightcurves from the OGLE, KMTNet, and MOA websites.
 This is a very short script that calls `query_alerts.py` that populates the database.
 This can be edited by the user depending on what set of alerts and photometry
 they are particularly interested in.
+4. `fitting_utils.py`.
+This module is called from app.py when the output database
+is downloaded as a JSON file, and it downloads the lightcurve of each event
+5. `mad_munge.py`
+Sets priors for model fitting
+7. templates
+Folder with all of the files for HTML display pages
+8. `run.py` in bagle_fits folder
+Takes the JSON file from the output database and feeds it as in input
+into Bayesian Analysis of Gravitational Lensing Events (BAGLE)
 
 ### Workflow
 Note that before the Flask app (`app.py`) can be run, `populate_database.py` must have been run.
@@ -72,4 +82,4 @@ and telescope information for each observation.
 ### Future work
 1. Figure out why populate_database currently only runs in ipython, not command line.
 2. Parallelize lightcurve download
-3. Automating the database updating via CronJob
+3. Automating database updates via CronJob
