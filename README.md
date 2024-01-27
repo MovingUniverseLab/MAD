@@ -1,6 +1,6 @@
 Microlensing Alert Database (MAD)
 
-Initially created by Casey Lam, further developed by Anette Brecko and Macy Huston
+Developed by members of the Moving Universe Lab at UC Berkeley: Casey Lam, Anette Brecko, Macy Huston, Jessica Lu
 
 # MAD 
 Microlensing Alerts Database (MAD) is a Flask webapp that allows the user to 
