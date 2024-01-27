@@ -1,5 +1,7 @@
 
 import ftplib
+from astropy import units as u
+from astropy.coordinates import SkyCoord
 from sqlalchemy import create_engine, text
 from sqlalchemy.sql import select
 from bs4 import BeautifulSoup
@@ -38,7 +40,7 @@ def get_moa_lightcurves(year):
     Outputs
     -------
     sqlite table called photometry in microlensing.db
-    Columns are hjd (HJD - 245000), mag, mag_err, alert_name, and telescope.
+    Columns are mjd, mag, mag_err, alert_name, and telescope.
     """
     # The delta flux measurements sometimes yield negative fluxes
     # after calibration. Ignore warnings so we don't have to deal
@@ -88,7 +90,7 @@ def get_moa_lightcurves(year):
         bytes_data = requests.get(url).content
         df = pd.read_csv(BytesIO(bytes_data), 
                          delim_whitespace=True, skiprows=11, skipfooter=1, header=None, engine='python', 
-                         names=['hjd', 'delta_flux', 'flux_err', 'foo1', 'foo2', 'foo3', 'foo4', 'foo5'])
+                         names=['mjd', 'delta_flux', 'flux_err', 'foo1', 'foo2', 'foo3', 'foo4', 'foo5'])
 
         # Add columns for magnitude and magnitude error, using the conversion
         # values we just figured out.
@@ -101,13 +103,13 @@ def get_moa_lightcurves(year):
         df['telescope'] = 'MOA'
         
         # Write HJD as HJD - 2450000 to match OGLE and KMTNet (less cumbersome digits)
-        df['hjd'] -= 2450000
+        df['hjd'] -= 2400000.5
 
         # Get rid of all the nans which crop up during the conversion from delta flux to magnitude.
         df.dropna(axis='index', how='any', inplace=True)
 
         # Write out the HJD, mag, mag_err, telescope, and alert_name data into the table.
-        cols = ['hjd', 'mag', 'mag_err', 'telescope', 'alert_name']
+        cols = ['mjd', 'mag', 'mag_err', 'telescope', 'alert_name']
         df[cols].to_sql(con=engine, schema=None, name="photometry", if_exists="append", index=False)
     t1 = time.time() 
     
@@ -150,7 +152,7 @@ def get_ogle_lightcurves(year):
             ftp.retrbinary('RETR phot.dat', flo.write)
             flo.seek(0)
             df = pd.read_fwf(flo, header=0, 
-                             names=['hjd', 'mag', 'mag_err', 'see', 'sky'], 
+                             names=['mjd', 'mag', 'mag_err', 'see', 'sky'], 
                              widths=[14, 7, 6, 5, 8])
 
             # Add a column for the alert name (of the form O[B/D/G]YYNNNN, YY=year, NNN=alert number)
@@ -159,10 +161,10 @@ def get_ogle_lightcurves(year):
             df['telescope'] = 'OGLE'
             
             # Write HJD as HJD - 2450000 (less cumbersome digits)
-            df['hjd'] -= 2450000
+            df['mjd'] -= 2400000.5
             
             # Write out the HJD, mag, mag_err, telescope, and alert_name data into the table.
-            cols = ['hjd', 'mag', 'mag_err', 'telescope', 'alert_name']
+            cols = ['mjd', 'mag', 'mag_err', 'telescope', 'alert_name']
             df[cols].to_sql(con=engine, schema=None, name="photometry", if_exists="append", index=False)
 
             ftp.cwd("../")
@@ -221,7 +223,7 @@ def get_kmtnet_lightcurves(year):
                 bytes_data = requests.get(url).content
                 df = pd.read_csv(BytesIO(bytes_data), 
                                  delim_whitespace=True, skiprows=1, header=None, 
-                                 names=['hjd', 'Delta_flux', 'flux_err', 'mag', 
+                                 names=['mjd', 'Delta_flux', 'flux_err', 'mag', 
                                         'mag_err', 'fwhm', 'sky', 'secz'])
 
                 # Add columns for the alert name (of the form KBYYNNNN, YY=year, NNNN=alert number)
@@ -230,10 +232,10 @@ def get_kmtnet_lightcurves(year):
                 df['telescope'] = pysis_name
                 
                 # Write HJD as HJD - 2450000 (less cumbersome digits)
-                df['hjd'] -= 2450000
+                df['mjd'] -= 2450000
 
                 # Write out the HJD, mag, mag_err, telescope, and alert_name data into the table.
-                cols = ['hjd', 'mag', 'mag_err', 'telescope', 'alert_name']
+                cols = ['mjd', 'mag', 'mag_err', 'telescope', 'alert_name']
                 df[cols].to_sql(con=engine, schema=None, name="photometry", 
                                 if_exists="append", index=False)
     t1 = time.time()             
@@ -262,6 +264,9 @@ def get_moa_params(alert_dir, year, nn):
     meta = soup.find('div', id="metadata").text
     RA = meta.split('RA:')[1].split('Dec:')[0]
     Dec = meta.split('RA:')[1].split('Dec:')[1].split('Current')[0]
+    c = SkyCoord(ra=RA, dec=Dec, unit=(u.hourangle, u.deg), frame='icrs')
+    b = c.galactic.b.degree
+    l = c.galactic.l.degree
 
     tmax_str = soup.find('div', id="lastphot").text.split('<td>=<td align=right>')[1]
     tmax = moa_str_to_float(tmax_str.split()[1])
@@ -280,8 +285,8 @@ def get_moa_params(alert_dir, year, nn):
     Ibase_e = moa_str_to_float(Ibase_str.split('<td>')[2].split()[0].split('<')[0])
 
     assessment = soup.find('div', id="metadata").find_all('td', align='right')[4].text
-    
-    return alert_name, RA, Dec, tmax, tmax_e, tE, tE_e, \
+        
+    return alert_name, RA, Dec, b, l, tmax, tmax_e, tE, tE_e, \
             u0, u0_e, Ibase, Ibase_e, assessment, url
     
 def get_moa_alerts(year):
@@ -330,11 +335,11 @@ def get_moa_alerts(year):
     
     # Put it all into a dataframe and write out to the database.
     df = pd.DataFrame(parallel_results,
-                     columns = ['alert_name', 'RA', 'Dec', 't0', 't0_err', 'tE', 'tE_err', 
+                     columns = ['alert_name', 'RA', 'Dec', 'l', 'b', 't0', 't0_err', 'tE', 'tE_err', 
                                 'u0', 'u0_err', 'Ibase', 'Ibase_err', 'class', 'alert_url'])
     
     # Write HJD as HJD - 2450000 (less cumbersome digits)
-    df['t0'] -= 2450000
+    df['t0'] -= 2400000.5
     
     # Fill in the other columns
     df['Isrc'] = np.nan
@@ -403,6 +408,9 @@ def get_ogle_params(year, nn, reg):
     # Parse the scraped data.
     RA = header_list[7]
     Dec = header_list[10]
+    c = SkyCoord(ra=RA, dec=Dec, unit=(u.hourangle, u.deg), frame='icrs')
+    b = c.galactic.b.degree
+    l = c.galactic.l.degree
     Tmax = ogle_str_to_float(param_list, 1)
     Tmax_e = ogle_str_to_float(param_list, 3)
     tau =  ogle_str_to_float(param_list, 7)
@@ -416,7 +424,7 @@ def get_ogle_params(year, nn, reg):
     I0 = ogle_str_to_float(param_list, 31)
     I0_e =  ogle_str_to_float(param_list, 33)
 
-    return alert_name, RA, Dec, Tmax, Tmax_e, tau, tau_e, Umin, Umin_e, \
+    return alert_name, RA, Dec, l, b, Tmax, Tmax_e, tau, tau_e, Umin, Umin_e, \
             fbl, fbl_e, Ibl, Ibl_e, I0, I0_e, url
 
 def ogle_str_to_float(list_in, idx):
@@ -483,7 +491,7 @@ def get_ogle_alerts(year):
 
     # Put it all into a dataframe and write out to the database.
     df = pd.DataFrame(parallel_results,
-                     columns =['alert_name', 'RA', 'Dec', 't0', 't0_err', 'tE', 'tE_err', 'u0', 'u0_err', 
+                     columns =['alert_name', 'RA', 'Dec', 'l', 'b', 't0', 't0_err', 'tE', 'tE_err', 'u0', 'u0_err', 
                                'srcfrac', 'srcfrac_err', 'Ibase', 'Ibase_err', 'Isrc', 'Isrc_err', 'alert_url'])
 
     # Add in missing columns
@@ -491,7 +499,7 @@ def get_ogle_alerts(year):
     df['related_event'] = ''
     
     # Write HJD as HJD - 2450000 (less cumbersome digits)
-    df['t0'] -= 2450000
+    df['t0'] -= 2400000.5
 
     df.to_sql(con=engine, schema=None, name="alerts", if_exists="append", index=False)
     
@@ -540,6 +548,9 @@ def get_kmtnet_alerts(year):
         class_ = soup.find_all('td')[3::15][1:]
         RA = soup.find_all('td')[4::15][1:]
         Dec = soup.find_all('td')[5::15][1:]
+        '''c = SkyCoord(ra=RA, dec=Dec, unit=(u.hourangle, u.deg), frame='icrs')
+        b = c.galactic.b.degree
+        l = c.galactic.l.degree'''
         t_0 = soup.find_all('td')[6::15][1:]
         t_E = soup.find_all('td')[7::15][1:]
         u_0 = soup.find_all('td')[8::15][1:]
@@ -551,6 +562,9 @@ def get_kmtnet_alerts(year):
         classAL = soup.find_all('td')[4::16][1:]
         RA = soup.find_all('td')[5::16][1:]
         Dec = soup.find_all('td')[6::16][1:]
+        '''c = SkyCoord(ra=RA, dec=Dec, unit=(u.hourangle, u.deg), frame='icrs')
+        b = c.galactic.b.degree
+        l = c.galactic.l.degree'''
         t_0 = soup.find_all('td')[7::16][1:]
         t_E = soup.find_all('td')[8::16][1:]
         u_0 = soup.find_all('td')[9::16][1:]
@@ -563,6 +577,9 @@ def get_kmtnet_alerts(year):
     # Process output to get strings/floats as appropriate.
     RA_list = [item.get_text().replace(u'\xa0', u'') for item in RA]
     Dec_list = [item.get_text().replace(u'\xa0', u'') for item in Dec]
+    c = SkyCoord(ra=RA_list, dec=Dec_list, unit=(u.hourangle, u.deg), frame='icrs')
+    b = c.galactic.b.degree
+    l = c.galactic.l.degree
     t_0_list = [kmtnet_str_to_float(item) for item in t_0]
     t_E_list = [kmtnet_str_to_float(item) for item in t_E]
     u_0_list = [kmtnet_str_to_float(item) for item in u_0]
@@ -593,14 +610,14 @@ def get_kmtnet_alerts(year):
 
     if year in ['2023','2022', '2020', '2017', '2016']:
         # Put it all into a dataframe and write out to the database.
-        df = pd.DataFrame(list(zip(alert_name, RA_list, Dec_list, t_0_list, t_E_list, u_0_list, 
+        df = pd.DataFrame(list(zip(alert_name, RA_list, Dec_list, l, b, t_0_list, t_E_list, u_0_list,
                                    Isource_list, Ibase_list, class_list, alert_url_list)),
-                         columns =['alert_name', 'RA', 'Dec', 't0', 'tE', 'u0',
+                         columns =['alert_name', 'RA', 'Dec', 'l', 'b', 't0', 'tE', 'u0',
                                    'Isrc', 'Ibase', 'class', 'alert_url'])
     elif year in ['2021', '2019', '2018']:
-        df = pd.DataFrame(list(zip(alert_name, RA_list, Dec_list, t_0_list, t_E_list, u_0_list, 
+        df = pd.DataFrame(list(zip(alert_name, RA_list, Dec_list, l, b, t_0_list, t_E_list, u_0_list,
                            Isource_list, Ibase_list, classEF_list, alert_url_list)),
-                 columns =['alert_name', 'RA', 'Dec', 't0', 'tE', 'u0',
+                 columns =['alert_name', 'RA', 'Dec', 'l', 'b', 't0', 'tE', 'u0',
                            'Isrc', 'Ibase', 'class', 'alert_url'])
      
     df['t0_err'] = np.nan

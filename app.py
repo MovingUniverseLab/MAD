@@ -15,6 +15,10 @@ import base64
 import numexpr as ne
 from flask import make_response
 from glob import glob
+from astropy.time import Time
+from datetime import date, datetime
+import json
+import fitting_utils
 
 app = Flask(__name__)
 
@@ -24,6 +28,12 @@ if len(argv)==1:
     engine = create_engine('sqlite:///'+latest_db)
 else:
     engine = create_engine('sqlite:///microlensing'+argv[1]+'.db')
+
+#Gets current Modified Julian Date to be displayed on HTML homepage
+def get_mjd():
+    time = datetime.now().isoformat()
+    t = Time(time, format='isot')
+    return round(t.mjd, 2)
 
 @app.route('/', methods=['GET', 'POST'])
 def query_db():
@@ -63,10 +73,11 @@ def query_db():
                                    query_str=query_str,
                                     html_table=df_html,        
                                    download_csv=url_for('download_csv', query_str=query_str),
+                                   download_json=url_for('download_json', query_str=query_str),
                                    browse_lc=browse_lc,
                                    browse_lightcurves=url_for('browse_lightcurves'))
         
-    return render_template('query.html')
+    return render_template('query.html', current_mjd = get_mjd())
 
 
 #Formatter functions ?
@@ -89,14 +100,52 @@ def download_csv(query_str):
     give you the column names.
     """
     with engine.connect() as conn:
-        df = pd.read_sql(query_str, conn)
+        df = pd.read_sql(text(query_str), conn)
     resp = make_response(df.to_csv())
     resp.headers["Content-Disposition"] = "attachment; filename=export.csv"
     resp.headers["Content-Type"] = "text/csv"
     
     return resp
 
+@app.route('/download_json/<query_str>', methods=['GET', 'POST'])
+def download_json(query_str):
+    with engine.connect() as conn:
+        df = pd.read_sql(text(query_str), conn, columns=["alert_name", "RA", "Dec"])
 
+    #Accounting for the JSON file failing to download when it only has one event
+    if (len(df)) == 1:
+        name_list = list(df.at[0, 'alert_name'])
+        ra_list = list(df.at[0, 'RA'])
+        dec_list = list(df.at[0, 'Dec'])
+
+    else:
+        name_list = df['alert_name'].squeeze().to_list()
+        ra_list = df['RA'].squeeze().to_list()
+        dec_list = df['Dec'].squeeze().to_list()
+
+    ra = {}
+    dec = {}
+    moa_alerts = []
+    kmt_alerts = []
+    ogle_alerts = []
+    for i in range(len(ra_list)): 
+        ra.update({name_list[i]: ra_list[i]})
+        dec.update({name_list[i]: dec_list[i]})
+        if "OB" or "OD" or "OG" in name_list[i]:
+            ogle_alerts.append(name_list[i])
+        if "MB" in name_list[i]:
+            moa_alerts.append(name_list[i])
+        if "KB" in name_list[i]:
+            kmt_alerts.append(name_list[i])
+    moa_lightcurves = fitting_utils.moa_lightcurves_from_list(moa_alerts)
+    kmt_lightcurves = fitting_utils.kmt_lightcurves_from_list(kmt_alerts)
+    ogle_lightcurves = fitting_utils.ogle_lightcurves_from_list(ogle_alerts)
+    dict = {'ra': ra, 'dec': dec, 'photom_moa': moa_lightcurves, 'photom_kmt' : kmt_lightcurves, 'photom_ogle' : ogle_lightcurves}
+    json_object = json.dumps(dict, indent=2)
+    open('query_output_' + str(date.today()) + '.json', 'w').write(json_object)
+    return render_template('json.html', json_object=json_object)
+    
+    
 @app.route('/browse_lightcurves', methods=['GET', 'POST'])
 def browse_lightcurves():
     """

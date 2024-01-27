@@ -10,14 +10,12 @@ interact with a database of event parameters and lightcurves from the
 [KMTNet](https://kmtnet.kasi.re.kr/~ulens/)
 microlensing alert websites.
 
-With MAD, the user can query the database and download the results as a CSV file.
-
-In addition, the user can query the database to choose lightcurves to view.
+With MAD, the user can query the database and download the results as a CSV file or JSON file.
 
 ### Background and motivation:
 Our research group is looking for isolated stellar mass black holes with microlensing.
 We want to choose promising black hole candidates from photometric microlensing 
-alert systems to follow up astrometrically for our HST Cycle 29 program.
+alert systems to follow up astrometrically for our HST program.
 The way we've done this in the past is to look through individual alert pages for events of interest.
 However, this is not ideal for many reasons:
 1. It is very time consuming to click through each alert page one at a time to look at lightcurves.
@@ -34,17 +32,21 @@ This also makes the process likely less thorough.
 are shown as difference image lightcurves, i.e. delta flux vs. time. 
 However, this is impossible to interpret in the sense that we care about (i.e. what is the
 difference between the baseline and peak magnification?)
+6. The alert systems provide PSPL fit parameters for each event, though not all include all values and/or errors.
+We want all parameters and errors for all available values, as well as more complex fit results.
+Specifically, microlensing parallax is a key parameter for selecting black hole candidates.
 
 MAD was created to help alleviate these issues.
 By aggregating all the alerts into a database, we can easily query a table of 
 alert parameters to find the events that are most promising.
-Then, we can use JOIN queries to grab the photometry data for those events
-to re-analyze and visualize ourselves.
+Then, we can use the [BAGLE](https://github.com/MovingUniverseLab/BAGLE_Microlensing)
+integration to fit the data to more complex models, 
+accounting for additional factors like microlensing parallax.
 The database can then also be easily updated to grab the latest changes, and
 the same query can be re-run, to see what changes.
 
 ### File structure of MAD
-There are three python files:
+There are several python files and additional directories:
 1. `app.py`. 
 This is the Flask app itself.
 2. `query_alerts.py`. 
@@ -56,11 +58,21 @@ and lightcurves from the OGLE, KMTNet, and MOA websites.
 This is a very short script that calls `query_alerts.py` that populates the database.
 This can be edited by the user depending on what set of alerts and photometry
 they are particularly interested in.
+4. `fitting_utils.py`.
+This module is called from app.py when the output database
+is downloaded as a JSON file, and it downloads the lightcurve of each event
+5. `run.py` in `bagle_fits` folder. <br />
+This module takes the JSON file from the query output and feeds it as in input
+into BAGLE (Bayesian Analysis of Gravitational Lensing Events)
+6. `mad_munge.py`.
+This file organizes the data and sets priors for model fitting in BAGLE
+7. `templates`.
+This folder contains all of the files for HTML display pages
 
 ### Workflow
 Note that before the Flask app (`app.py`) can be run, `populate_database.py` must have been run.
 
-By running `populate_database.py`, a database called `microlensing.db` is created.
+By running `populate_database.py`, a database called `microlensing_<date>.db` is created.
 It consists of up to two tables, `alerts` and `photometry`.
 The primary key for the `alerts` table is `alert_name`. 
 The `alerts` table also contains the microlensing parameters reported by the alert system,
@@ -69,19 +81,8 @@ In the `photometry` table, `alert_name` is the foreign key.
 Each row in the `photometry` table also contains the date, magnitude, magnitude uncertainty, 
 and telescope information for each observation.
 
-### Future work - simpler items
-1. Save fewer decimals for some of the numbers in the table (like HJD or mag).
-2. Add galactic coordinates to the output table.
-3. Figure out why populate_database currently only runs in ipython, not command line.
-
-### Future work - potential complex items
-1. Parallelize lightcurve download (currently ~1 hour for each alert system year). 
-Need to figure out parallel writing to SQL database (is that allowed) as well as
-how to parallelize ftp downloads.
-2. Implementing some automated way of updating the database.
-(See notes from meeting with Josh.)
-3. Add unit tests.
-4. Better error handling (e.g. if you put in an invalid SQL query, right now,
-the Flask app will just fail-- ideally, it should bring you to a page that 
-explains why the error exists, then prompts you for another query). 
-5. Caching or some way to make the lightcurve viewing faster.
+### Future work
+1. Figure out why populate_database currently only runs in ipython, not command line.
+2. Speed up and maybe parallelize lightcurve download.
+3. Automate database updates via CronJob.
+4. Consider making MAD available publicly via hosted web app.
