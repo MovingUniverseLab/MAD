@@ -544,7 +544,7 @@ def get_kmtnet_alerts(year):
     # classifications ("EF" and "AL", I don't know what it means).
     # For years where there are two classifications, I've picked 
     # AL classification arbitrarily.
-    if year in ['2023','2022', '2020', '2017', '2016']:
+    if year in ['2022', '2020', '2017', '2016']:
         class_ = soup.find_all('td')[3::15][1:]
         RA = soup.find_all('td')[4::15][1:]
         Dec = soup.find_all('td')[5::15][1:]
@@ -557,7 +557,7 @@ def get_kmtnet_alerts(year):
         Isource = soup.find_all('td')[9::15][1:]
         Ibase = soup.find_all('td')[10::15][1:]
         rel_ev = soup.find_all('td')[14::15][1:]
-    elif year in ['2021', '2019', '2018']:
+    elif year in ['2023', '2021', '2019', '2018']:
         classEF = soup.find_all('td')[3::16][1:]
         classAL = soup.find_all('td')[4::16][1:]
         RA = soup.find_all('td')[5::16][1:]
