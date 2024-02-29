@@ -544,27 +544,23 @@ def get_kmtnet_alerts(year):
     # classifications ("EF" and "AL", I don't know what it means).
     # For years where there are two classifications, I've picked 
     # AL classification arbitrarily.
-    if year in ['2022', '2020', '2017', '2016']:
+    years_2016_to_2022 = ['2022', '2020', '2017', '2016']
+    years_2018_to_2023 = ['2023', '2021', '2019', '2018']
+    if year in years_2016_to_2022:
         class_ = soup.find_all('td')[3::15][1:]
         RA = soup.find_all('td')[4::15][1:]
         Dec = soup.find_all('td')[5::15][1:]
-        '''c = SkyCoord(ra=RA, dec=Dec, unit=(u.hourangle, u.deg), frame='icrs')
-        b = c.galactic.b.degree
-        l = c.galactic.l.degree'''
         t_0 = soup.find_all('td')[6::15][1:]
         t_E = soup.find_all('td')[7::15][1:]
         u_0 = soup.find_all('td')[8::15][1:]
         Isource = soup.find_all('td')[9::15][1:]
         Ibase = soup.find_all('td')[10::15][1:]
         rel_ev = soup.find_all('td')[14::15][1:]
-    elif year in ['2023', '2021', '2019', '2018']:
+    elif year in years_2018_to_2023:
         classEF = soup.find_all('td')[3::16][1:]
         classAL = soup.find_all('td')[4::16][1:]
         RA = soup.find_all('td')[5::16][1:]
         Dec = soup.find_all('td')[6::16][1:]
-        '''c = SkyCoord(ra=RA, dec=Dec, unit=(u.hourangle, u.deg), frame='icrs')
-        b = c.galactic.b.degree
-        l = c.galactic.l.degree'''
         t_0 = soup.find_all('td')[7::16][1:]
         t_E = soup.find_all('td')[8::16][1:]
         u_0 = soup.find_all('td')[9::16][1:]
@@ -593,9 +589,9 @@ def get_kmtnet_alerts(year):
         classAL_list = [item.get_text().replace(u'\xa0', u'') for item in classAL]
 
     # Get link to the alert page.
-    if year in ['2023','2022', '2020', '2017', '2016']:
+    if year in years_2016_to_2022:
         alert_url = soup.find_all('td')[0::15][1:]
-    elif year in ['2021', '2019', '2018']:
+    elif year in years_2018_to_2023:
         alert_url = soup.find_all('td')[0::16][1:]
     else:
         raise Exception('Not a valid year')
@@ -608,13 +604,13 @@ def get_kmtnet_alerts(year):
     for ii in np.arange(nn):
         alert_name.append('KB' + year[2:] + str(ii+1).zfill(4))
 
-    if year in ['2023','2022', '2020', '2017', '2016']:
+    if year in years_2016_to_2022:
         # Put it all into a dataframe and write out to the database.
         df = pd.DataFrame(list(zip(alert_name, RA_list, Dec_list, l, b, t_0_list, t_E_list, u_0_list,
                                    Isource_list, Ibase_list, class_list, alert_url_list)),
                          columns =['alert_name', 'RA', 'Dec', 'l', 'b', 't0', 'tE', 'u0',
                                    'Isrc', 'Ibase', 'class', 'alert_url'])
-    elif year in ['2021', '2019', '2018']:
+    elif year in years_2018_to_2023:
         df = pd.DataFrame(list(zip(alert_name, RA_list, Dec_list, l, b, t_0_list, t_E_list, u_0_list,
                            Isource_list, Ibase_list, classEF_list, alert_url_list)),
                  columns =['alert_name', 'RA', 'Dec', 'l', 'b', 't0', 'tE', 'u0',

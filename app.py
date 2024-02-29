@@ -127,7 +127,8 @@ def download_json(query_str):
     dec = {}
     moa_alerts = []
     kmt_alerts = []
-    ogle_alerts = []data_set_dict = {}
+    ogle_alerts = []
+    data_set_dict = {}
     ogle_data = {'I_OGLE': 'photom_ogle'}
     moa_data = {'MOA' : 'photom_moa'}
     kmt_data = {'KMT': 'photom_kmt'}
