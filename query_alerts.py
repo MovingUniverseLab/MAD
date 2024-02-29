@@ -582,9 +582,9 @@ def get_kmtnet_alerts(year):
     Isource_list = [kmtnet_str_to_float(item) for item in Isource]
     Ibase_list = [kmtnet_str_to_float(item) for item in Ibase]
     rel_ev_list = [item.get_text().replace(u'\xa0', u'') for item in rel_ev]
-    if year in ['2023','2022', '2020', '2017', '2016']:
+    if year in years_2016_to_2022:
         class_list = [item.get_text().replace(u'\xa0', u'') for item in class_]
-    elif year in ['2021', '2019', '2018']:
+    elif year in years_2016_to_2022:
         classEF_list = [item.get_text().replace(u'\xa0', u'') for item in classEF]
         classAL_list = [item.get_text().replace(u'\xa0', u'') for item in classAL]
 
