@@ -127,20 +127,28 @@ def download_json(query_str):
     dec = {}
     moa_alerts = []
     kmt_alerts = []
-    ogle_alerts = []
+    ogle_alerts = []data_set_dict = {}
+    ogle_data = {'I_OGLE': 'photom_ogle'}
+    moa_data = {'MOA' : 'photom_moa'}
+    kmt_data = {'KMT': 'photom_kmt'}
     for i in range(len(ra_list)): 
+        data = {}
         ra.update({name_list[i]: ra_list[i]})
         dec.update({name_list[i]: dec_list[i]})
         if "OB" or "OD" or "OG" in name_list[i]:
             ogle_alerts.append(name_list[i])
+            data = {name_list[i] : ogle_data}
         if "MB" in name_list[i]:
             moa_alerts.append(name_list[i])
+            data = {name_list[i] : moa_data}
         if "KB" in name_list[i]:
             kmt_alerts.append(name_list[i])
+            data = {name_list[i] : kmt_data}
+        data_set_dict.append(data)
     moa_lightcurves = fitting_utils.moa_lightcurves_from_list(moa_alerts)
     kmt_lightcurves = fitting_utils.kmt_lightcurves_from_list(kmt_alerts)
     ogle_lightcurves = fitting_utils.ogle_lightcurves_from_list(ogle_alerts)
-    dict = {'ra': ra, 'dec': dec, 'photom_moa': moa_lightcurves, 'photom_kmt' : kmt_lightcurves, 'photom_ogle' : ogle_lightcurves}
+    dict = {'ra': ra, 'dec': dec, 'photom_moa': moa_lightcurves, 'photom_kmt' : kmt_lightcurves, 'photom_ogle' : ogle_lightcurves, 'data_sets': data_set_dict}
     json_object = json.dumps(dict, indent=2)
     open('query_output_' + str(date.today()) + '.json', 'w').write(json_object)
     return render_template('json.html', json_object=json_object)
