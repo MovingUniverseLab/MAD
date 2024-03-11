@@ -42,18 +42,19 @@ print(data_sets)
 
 def getpriors(target):
     # Get alert fit info as starting points to set priors for BAGLE fit
-    alertkeys = ['t0', 't0_err', 'tE', 'tE_err', 'Ibase', 'Ibase_err', 'Isrc', 'Isrc_err', 'srcfrac', 'srcfrac_err']
+    #alertkeys = ['t0', 't0_err', 'tE', 'tE_err', 'Ibase', 'Ibase_err', 'Isrc', 'Isrc_err', 'srcfrac', 'srcfrac_err']
+    alertkeys = ['t0', 'tE', 'Ibase']
     alertfit = {}
     for key in alertkeys:
         alertfit[key] = data[key][target]
 
     # Calculate reasonable priors based on alert fit
-    priorkeys = ['t0', 'tE', 'Isrc', 'srcfrac']
+    #priorkeys = ['t0', 'tE', 'Isrc', 'srcfrac']
     priors = {}
 
     priors['t0'] = [alertfit['t0'] - alertfit['tE']/2, alertfit['t0'] + alertfit['tE']/2]
     priors['tE'] = [alertfit['tE'] - alertfit['tE']/2, alertfit['tE'] + alertfit['tE']/2]
-    priors['Ibase'] = [alertfit['Ibase'] - 0.2, alertfit['Isrc'] + 0.2]
+    priors['Ibase'] = [alertfit['Ibase'] - 0.2, alertfit['Ibase'] + 0.2]
 
     # Don't put real limits on blending
     #priors['srcfrac'] = [0.001,1.05]
