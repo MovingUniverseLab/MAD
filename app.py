@@ -112,19 +112,18 @@ def download_json(query_str):
     with engine.connect() as conn:
         df = pd.read_sql(text(query_str), conn, columns=["alert_name", "RA", "Dec"])
 
-    #Accounting for the JSON file failing to download when it only has one event
-    if (len(df)) == 1:
-        name_list = list(df.at[0, 'alert_name'])
-        ra_list = list(df.at[0, 'RA'])
-        dec_list = list(df.at[0, 'Dec'])
-
-    else:
-        name_list = df['alert_name'].squeeze().to_list()
-        ra_list = df['RA'].squeeze().to_list()
-        dec_list = df['Dec'].squeeze().to_list()
+    name_list = df['alert_name'].squeeze().to_list()
+    ra_list = df['RA'].squeeze().to_list()
+    dec_list = df['Dec'].squeeze().to_list()
+    t0_list = df['t0'].squeeze().to_list()
+    tE_list = df['tE'].squeeze().to_list()
+    Ibase_list = df['Ibase'].squeeze().to_list()
 
     ra = {}
     dec = {}
+    t0 = {}
+    tE = {}
+    Ibase = {}
     moa_alerts = []
     kmt_alerts = []
     ogle_alerts = []
@@ -136,6 +135,9 @@ def download_json(query_str):
         data = {}
         ra.update({name_list[i]: ra_list[i]})
         dec.update({name_list[i]: dec_list[i]})
+        t0.update({name_list[i]: t0_list[i]})
+        tE.update({name_list[i]: tE_list[i]})
+        Ibase.update({name_list[i]: Ibase_list[i]})
         if "OB" or "OD" or "OG" in name_list[i]:
             ogle_alerts.append(name_list[i])
             data = {name_list[i] : ogle_data}
@@ -145,11 +147,11 @@ def download_json(query_str):
         if "KB" in name_list[i]:
             kmt_alerts.append(name_list[i])
             data = {name_list[i] : kmt_data}
-        data_set_dict.append(data)
+        data_set_dict.update(data)
     moa_lightcurves = fitting_utils.moa_lightcurves_from_list(moa_alerts)
     kmt_lightcurves = fitting_utils.kmt_lightcurves_from_list(kmt_alerts)
     ogle_lightcurves = fitting_utils.ogle_lightcurves_from_list(ogle_alerts)
-    dict = {'ra': ra, 'dec': dec, 'photom_moa': moa_lightcurves, 'photom_kmt' : kmt_lightcurves, 'photom_ogle' : ogle_lightcurves, 'data_sets': data_set_dict}
+    dict = {'ra': ra, 'dec': dec, 't0' : t0, 'tE' : tE, 'Ibase' : Ibase, 'photom_moa': moa_lightcurves, 'photom_kmt' : kmt_lightcurves, 'photom_ogle' : ogle_lightcurves, 'data_sets': data_set_dict}
     json_object = json.dumps(dict, indent=2)
     open('query_output_' + str(date.today()) + '.json', 'w').write(json_object)
     return render_template('json.html', json_object=json_object)

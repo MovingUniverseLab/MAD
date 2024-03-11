@@ -148,9 +148,9 @@ def getdata2(target, phot_data=['I_OGLE'], ast_data=['Kp_Keck'],
         if filt == 'I_OGLE':
             # Read in photometry table.
             pho = Table.read(data_sets[target][filt], format = 'ascii')
-            t = Time(pho['col1'], format='jd', scale='utc')
-            m = pho['col2']
-            me = pho['col3']
+            t = Time(pho['mjd'], format='jd', scale='utc')
+            m = pho['mag']
+            me = pho['mag_err']
 
         if filt == 'Kp_Keck':
             pho = Table.read(data_sets[target][filt])
