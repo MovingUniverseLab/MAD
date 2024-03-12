@@ -148,7 +148,7 @@ def getdata2(target, phot_data=['I_OGLE'], ast_data=['Kp_Keck'],
         if filt == 'I_OGLE':
             # Read in photometry table.
             pho = Table.read(data_sets[target][filt], format = 'ascii')
-            t = Time(pho['mjd'], format='jd', scale='utc')
+            t = Time(pho['mjd'], format='mjd', scale='utc')
             m = pho['mag']
             me = pho['mag_err']
 
@@ -202,13 +202,13 @@ def getdata2(target, phot_data=['I_OGLE'], ast_data=['Kp_Keck'],
                 
             me = np.ones(len(t), dtype=float) * me_neigh
 
-        if filt == 'Ch1_Spitzer':
-            pho = Table.read(data_sets[target][filt], format='ascii')
-            t = Time(pho['col1']  + 2450000.0, format='jd', scale='utc')
-            f = pho['col2']
-            fe = pho['col3']
-            m = 25.0 - 2.5 * np.log10(f)
-            me = 1.086 * fe / f
+        #if filt == 'Ch1_Spitzer':
+        #    pho = Table.read(data_sets[target][filt], format='ascii')
+        #    t = Time(pho['col1']  + 2450000.0, format='jd', scale='utc')
+        #    f = pho['col2']
+        #    fe = pho['col3']
+        #    m = 25.0 - 2.5 * np.log10(f)
+        #    me = 1.086 * fe / f
 
         if filt == 'MOA':
             pho = Table.read(data_sets[target][filt], format='ascii')
