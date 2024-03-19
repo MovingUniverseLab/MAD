@@ -53,7 +53,7 @@ def getpriors(target):
     priors = {}
 
     priors['t0'] = [alertfit['t0'] - alertfit['tE']/2, alertfit['t0'] + alertfit['tE']/2]
-    priors['tE'] = [alertfit['tE'] - alertfit['tE']/2, alertfit['tE'] + alertfit['tE']/2]
+    priors['tE'] = [min(alertfit['tE']/2, 50), alertfit['tE'] + alertfit['tE']/2]
     priors['Ibase'] = [alertfit['Ibase'] - 0.2, alertfit['Ibase'] + 0.2]
 
     # Don't put real limits on blending
