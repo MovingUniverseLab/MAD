@@ -79,25 +79,26 @@ def moa_lightcurves_from_list(moa_list):
 
 
 def kmt_lightcurves_from_list(kmt_list):
+    #print(kmt_list)
     if len(kmt_list) == 0:
         return {}
     #Download lightcurves from KMTNet website only for events in list, using code from query_alerts
     year = "20" + str(kmt_list[0][2:4])  
-    url = "https://kmtnet.kasi.re.kr/~ulens/event/" + year + "/"
-    response = urlopen(url)
-    html = response.read()
-    response.close()
-    soup = BeautifulSoup(html,"html.parser")
-    nobj = len(soup.find_all('td')[0::15][1:])
-    event_to_link = {}
-    for event in kmt_list:
-        num = event[len(event)-1]
-        link = "https://kmtnet.kasi.re.kr/~ulens/event/" + year + \
-                "/view.php?event=KMT-" + year + "-BLG-" + num
-        event_to_link[event] = link
+    #url = "https://kmtnet.kasi.re.kr/~ulens/event/" + year + "/"
+    #response = urlopen(url)
+    #html = response.read()
+    #response.close()
+    #soup = BeautifulSoup(html,"html.parser")
+    #nobj = len(soup.find_all('td')[0::15][1:])
+    #event_to_link = {}
     file_dirs = {}
-    for x in event_to_link:
-        url = event_to_link[x]
+    for event in kmt_list:
+        num = event[4:].zfill(4)
+        url = "https://kmtnet.kasi.re.kr/~ulens/event/" + year + \
+                "/view.php?event=KMT-" + year + "-BLG-" + num
+        #event_to_link[event] = link
+        #for x in kmt_list:
+        #url = event_to_link[event]
         response = urlopen(url)
         html = response.read()
         response.close()
@@ -106,27 +107,24 @@ def kmt_lightcurves_from_list(kmt_list):
         # Get the names of all the different lightcurve files (pysis names).
         links = soup.find_all('a', href=True)
         pysis_names = links[3].get_text(separator=',').split(',')[:-2]
-        
-        # Note, we are only keeping I-band lightcurves (V-band ones are not useful). 
+        # Note, we are only keeping I-band lightcurves (V-band ones are not useful).
         for pysis_name in pysis_names:
             if '_I.pysis' in pysis_name:
                 # Grab the photometry for each alert's I-band lightcurve data into a pands dataframe.
                 url = "https://kmtnet.kasi.re.kr/~ulens/event/" + year + "/data/KB" + \
-                        year[2:] + str(nn).zfill(4) + "/pysis/" + pysis_name
-
+                        year[2:] + str(num) + "/pysis/" + pysis_name
                 bytes_data = requests.get(url).content
                 df = pd.read_csv(BytesIO(bytes_data), 
                                  delim_whitespace=True, skiprows=1, header=None, 
-                                 names=['mjd', 'Delta_flux', 'flux_err', 'mag', 
-                                        'mag_err', 'fwhm', 'sky', 'secz'])
+                                 names=['mjd', 'Delta_flux', 'flux_err', 'mag', 'mag_err', 'fwhm', 'sky', 'secz'])
                 df['mjd'] -= 2450000
 
                 # Write out the MJD, mag, mag_err, telescope, and alert_name data into the table.
                 cols = ['mjd', 'mag', 'mag_err']
 
                 #Download dataframe object as a csv file to the MOA specific folder within MAD
-                path = 'lightcurves/KMTNet/' + x + '.csv'
-                file_dirs[alert_name] = path
+                path = 'lightcurves/KMTNet/' + event + '.csv'
+                file_dirs[event] = path
                 file_path = Path(path)
                 file_path.parent.mkdir(parents=True, exist_ok=True)
                 df[cols].to_csv(file_path, index=False)

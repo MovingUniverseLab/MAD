@@ -544,9 +544,9 @@ def get_kmtnet_alerts(year):
     # classifications ("EF" and "AL", I don't know what it means).
     # For years where there are two classifications, I've picked 
     # AL classification arbitrarily.
-    years_2016_to_2022 = ['2022', '2020', '2017', '2016']
-    years_2018_to_2023 = ['2023', '2021', '2019', '2018']
-    if year in years_2016_to_2022:
+    years_oneclass = ['2024', '2022', '2020', '2017', '2016']
+    years_twoclass = ['2023', '2021', '2019', '2018']
+    if year in years_oneclass:
         class_ = soup.find_all('td')[3::15][1:]
         RA = soup.find_all('td')[4::15][1:]
         Dec = soup.find_all('td')[5::15][1:]
@@ -556,7 +556,7 @@ def get_kmtnet_alerts(year):
         Isource = soup.find_all('td')[9::15][1:]
         Ibase = soup.find_all('td')[10::15][1:]
         rel_ev = soup.find_all('td')[14::15][1:]
-    elif year in years_2018_to_2023:
+    elif year in years_twoclass:
         classEF = soup.find_all('td')[3::16][1:]
         classAL = soup.find_all('td')[4::16][1:]
         RA = soup.find_all('td')[5::16][1:]
@@ -582,16 +582,16 @@ def get_kmtnet_alerts(year):
     Isource_list = [kmtnet_str_to_float(item) for item in Isource]
     Ibase_list = [kmtnet_str_to_float(item) for item in Ibase]
     rel_ev_list = [item.get_text().replace(u'\xa0', u'') for item in rel_ev]
-    if year in years_2016_to_2022:
+    if year in years_oneclass:
         class_list = [item.get_text().replace(u'\xa0', u'') for item in class_]
-    elif year in years_2016_to_2022:
+    elif year in years_oneclass:
         classEF_list = [item.get_text().replace(u'\xa0', u'') for item in classEF]
         classAL_list = [item.get_text().replace(u'\xa0', u'') for item in classAL]
 
     # Get link to the alert page.
-    if year in years_2016_to_2022:
+    if year in years_oneclass:
         alert_url = soup.find_all('td')[0::15][1:]
-    elif year in years_2018_to_2023:
+    elif year in years_twoclass:
         alert_url = soup.find_all('td')[0::16][1:]
     else:
         raise Exception('Not a valid year')
@@ -604,13 +604,13 @@ def get_kmtnet_alerts(year):
     for ii in np.arange(nn):
         alert_name.append('KB' + year[2:] + str(ii+1).zfill(4))
 
-    if year in years_2016_to_2022:
+    if year in years_oneclass:
         # Put it all into a dataframe and write out to the database.
         df = pd.DataFrame(list(zip(alert_name, RA_list, Dec_list, l, b, t_0_list, t_E_list, u_0_list,
                                    Isource_list, Ibase_list, class_list, alert_url_list)),
                          columns =['alert_name', 'RA', 'Dec', 'l', 'b', 't0', 'tE', 'u0',
                                    'Isrc', 'Ibase', 'class', 'alert_url'])
-    elif year in years_2018_to_2023:
+    elif year in years_twoclass:
         df = pd.DataFrame(list(zip(alert_name, RA_list, Dec_list, l, b, t_0_list, t_E_list, u_0_list,
                            Isource_list, Ibase_list, classEF_list, alert_url_list)),
                  columns =['alert_name', 'RA', 'Dec', 'l', 'b', 't0', 'tE', 'u0',
