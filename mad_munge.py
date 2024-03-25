@@ -244,8 +244,8 @@ def getdata2(target, phot_data=['I_OGLE'], ast_data=['Kp_Keck'],
                 me = me[::-1]
 
         if filt == 'KMT':
-            pho = Table.read(data_sets[target][filt], format='ascii')
-            t = Time(pho['HJD'] + 2450000.0, format='jd', scale='utc')
+            pho = Table.read(data_sets[target][filt], format = 'ascii')
+            t = Time(pho['mjd'], format='mjd', scale='utc')
             m = pho['mag']
             me = pho['mag_err']
 

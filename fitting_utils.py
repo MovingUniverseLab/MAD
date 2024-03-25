@@ -117,7 +117,7 @@ def kmt_lightcurves_from_list(kmt_list):
                 df = pd.read_csv(BytesIO(bytes_data), 
                                  delim_whitespace=True, skiprows=1, header=None, 
                                  names=['mjd', 'Delta_flux', 'flux_err', 'mag', 'mag_err', 'fwhm', 'sky', 'secz'])
-                df['mjd'] -= 2450000
+                df['mjd'] -= 2400000.5
 
                 # Write out the MJD, mag, mag_err, telescope, and alert_name data into the table.
                 cols = ['mjd', 'mag', 'mag_err']
