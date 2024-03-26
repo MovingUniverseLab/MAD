@@ -13,6 +13,7 @@ import pylab as plt
 import numpy as np
 from datetime import date, datetime
 import json
+from glob import glob
 
 def run_bagle(target, phot_data, modstr):
     # Load needed data from munge
@@ -20,6 +21,7 @@ def run_bagle(target, phot_data, modstr):
                           phot_data=phot_data,
                           ast_data = [])
     priors = mad_munge.getpriors(target)
+    print(priors)
     datestr = datetime.today().strftime('%Y_%m_%d')
 
     # Set up directory structure if needed
@@ -42,8 +44,8 @@ def run_bagle(target, phot_data, modstr):
     fitter.priors['t0'] = model_fitter.make_gen(*priors['t0'])
     fitter.priors['u0_amp'] = model_fitter.make_gen(-1.0, 1.0)
     fitter.priors['tE'] = model_fitter.make_gen(*priors['tE'])
-    fitter.priors['piE_E'] = model_fitter.make_gen(-0.5, 0.5)
-    fitter.priors['piE_N'] = model_fitter.make_gen(-0.5, 0.5)
+    fitter.priors['piE_E'] = model_fitter.make_norm_gen(-0.02, 0.12)
+    fitter.priors['piE_N'] = model_fitter.make_norm_gen(-0.03, 0.13)
     fitter.priors['b_sff1'] = model_fitter.make_gen(0.0,1.05)
     #fitter.priors['b_sff2'] = model_fitter.make_gen(0, 1.01)
     fitter.priors['mag_base1'] = model_fitter.make_gen(*priors['Ibase'])
@@ -84,7 +86,7 @@ def run_bagle(target, phot_data, modstr):
         plt.close('all')
         best_mod = fitter.get_best_fit_model(def_best='maxL')
         fitter.plot_model_and_data(best_mod, suffix='_maxL',
-                                   zoomx=[[59900, 60300], None, None],
+                                   zoomx=[[60000, 60500], None, None],
                                    zoomy=[[16.8, 15], None, None],
                                    zoomy_res=[[-0.1, 0.1], None, None])
         plt.close('all')
@@ -92,14 +94,14 @@ def run_bagle(target, phot_data, modstr):
 def run_all():
     # Get required inputs for fit
     modstr = 'pspl_phot_par'
-    query_output = json.load(open('query_output_' + str(date.today()) + '.json'))
+    query_output = json.load(open(sorted(glob('query_output*'))[-1]))
     target_list = list(query_output['ra'].keys())
     for target in target_list:
         run_bagle(target, list(query_output['data_sets'][target].keys()), modstr)
 
 def run_one(target):
     modstr = 'pspl_phot_par'
-    query_output = json.load(open('query_output_' + str(date.today()) + '.json'))
+    query_output = json.load(open(sorted(glob('query_output*'))[-1]))
     run_bagle(target, list(query_output['data_sets'][target].keys()), modstr)
 
 #run_all()

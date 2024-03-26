@@ -17,9 +17,10 @@ from astropy import time as atime, coordinates as coord, units as u
 import os
 from datetime import date
 import json
+from glob import glob
 
 mad_dir = os.getcwd()+'/' #'/u/mhuston/code/MAD/'
-data = json.load(open(mad_dir+'query_output_' + str(date.today()) + '.json'))
+data = json.load(open(sorted(glob(mad_dir+'query_output*'))[-1]))
 
 ra = data['ra']
 dec = data['dec']
@@ -52,14 +53,14 @@ def getpriors(target):
     #priorkeys = ['t0', 'tE', 'Isrc', 'srcfrac']
     priors = {}
 
-    priors['t0'] = [alertfit['t0'] - alertfit['tE']/2, alertfit['t0'] + alertfit['tE']/2]
-    priors['tE'] = [min(alertfit['tE']/2, 50), alertfit['tE'] + alertfit['tE']/2]
-    priors['Ibase'] = [alertfit['Ibase'] - 0.2, alertfit['Ibase'] + 0.2]
+    priors['t0'] = [alertfit['t0'] - alertfit['tE'], alertfit['t0'] + alertfit['tE']]
+    priors['tE'] = [min(alertfit['tE']/2, 14), alertfit['tE'] + alertfit['tE']/2]
+    priors['Ibase'] = [alertfit['Ibase'] - 0.5, alertfit['Ibase'] + 0.5]
 
     # Don't put real limits on blending
     #priors['srcfrac'] = [0.001,1.05]
 
-    print(priors)
+    #print(priors)
     return priors
 
 def getdata2(target, phot_data=['I_OGLE'], ast_data=['Kp_Keck'],
