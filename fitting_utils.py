@@ -92,6 +92,7 @@ def kmt_lightcurves_from_list(kmt_list):
     #nobj = len(soup.find_all('td')[0::15][1:])
     #event_to_link = {}
     file_dirs = {}
+    df_list = []
     for event in kmt_list:
         num = event[4:].zfill(4)
         url = "https://kmtnet.kasi.re.kr/~ulens/event/" + year + \
@@ -118,6 +119,7 @@ def kmt_lightcurves_from_list(kmt_list):
                                  delim_whitespace=True, skiprows=1, header=None, 
                                  names=['mjd', 'Delta_flux', 'flux_err', 'mag', 'mag_err', 'fwhm', 'sky', 'secz'])
                 df['mjd'] -= 2400000.5
+                df_list.append(df)
 
                 # Write out the MJD, mag, mag_err, telescope, and alert_name data into the table.
                 cols = ['mjd', 'mag', 'mag_err']
@@ -128,7 +130,7 @@ def kmt_lightcurves_from_list(kmt_list):
                 file_path = Path(path)
                 file_path.parent.mkdir(parents=True, exist_ok=True)
                 df[cols].to_csv(file_path, index=False)
-    return file_dirs
+    return pd.concat(df_list)
 
 def ogle_lightcurves_from_list(ogle_list):
     if len(ogle_list) == 0:
