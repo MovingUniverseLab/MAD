@@ -271,7 +271,6 @@ def get_moa_params(alert_dir, year, nn):
     tmax_str = soup.find('div', id="lastphot").text.split('<td>=<td align=right>')[1]
     tmax = moa_str_to_float(tmax_str.split()[1])
     tmax_e = moa_str_to_float(tmax_str.split('<td>')[2].split()[0])
-    SNR_t0 = tmax / tmax_e
 
     tE_str = soup.find('div', id="lastphot").text.split('<td>=<td align=right>')[2]
     tE = moa_str_to_float(tE_str.split()[0])
@@ -287,7 +286,7 @@ def get_moa_params(alert_dir, year, nn):
 
     assessment = soup.find('div', id="metadata").find_all('td', align='right')[4].text
         
-    return alert_name, RA, Dec, b, l, tmax, tmax_e, SNR_t0, tE, tE_e, \
+    return alert_name, RA, Dec, b, l, tmax, tmax_e, tE, tE_e, \
             u0, u0_e, Ibase, Ibase_e, assessment, url
     
 def get_moa_alerts(year):
@@ -336,7 +335,7 @@ def get_moa_alerts(year):
     
     # Put it all into a dataframe and write out to the database.
     df = pd.DataFrame(parallel_results,
-                     columns = ['alert_name', 'RA', 'Dec', 'l', 'b', 't0', 't0_err', 'SNR_t0', 'tE', 'tE_err', 
+                     columns = ['alert_name', 'RA', 'Dec', 'l', 'b', 't0', 't0_err', 'tE', 'tE_err', 
                                 'u0', 'u0_err', 'Ibase', 'Ibase_err', 'class', 'alert_url'])
     
     # Change JD to MJD
@@ -414,7 +413,6 @@ def get_ogle_params(year, nn, reg):
     l = c.galactic.l.degree
     Tmax = ogle_str_to_float(param_list, 1)
     Tmax_e = ogle_str_to_float(param_list, 3)
-    SNR_t0 = Tmax / Tmax_e
     tau =  ogle_str_to_float(param_list, 7)
     tau_e =  ogle_str_to_float(param_list, 9)
     Umin =  ogle_str_to_float(param_list, 11)
@@ -426,7 +424,7 @@ def get_ogle_params(year, nn, reg):
     I0 = ogle_str_to_float(param_list, 31)
     I0_e =  ogle_str_to_float(param_list, 33)
 
-    return alert_name, RA, Dec, l, b, Tmax, Tmax_e, SNR_t0, tau, tau_e, Umin, Umin_e, \
+    return alert_name, RA, Dec, l, b, Tmax, Tmax_e, tau, tau_e, Umin, Umin_e, \
             fbl, fbl_e, Ibl, Ibl_e, I0, I0_e, url
 
 def ogle_str_to_float(list_in, idx):
@@ -493,7 +491,7 @@ def get_ogle_alerts(year):
 
     # Put it all into a dataframe and write out to the database.
     df = pd.DataFrame(parallel_results,
-                     columns =['alert_name', 'RA', 'Dec', 'l', 'b', 't0', 't0_err', 'SNR_t0', 'tE', 'tE_err', 'u0', 'u0_err', 
+                     columns =['alert_name', 'RA', 'Dec', 'l', 'b', 't0', 't0_err', 'tE', 'tE_err', 'u0', 'u0_err', 
                                'srcfrac', 'srcfrac_err', 'Ibase', 'Ibase_err', 'Isrc', 'Isrc_err', 'alert_url'])
 
     # Add in missing columns
@@ -618,14 +616,13 @@ def get_kmtnet_alerts(year):
                  columns =['alert_name', 'RA', 'Dec', 'l', 'b', 't0', 'tE', 'u0',
                            'Isrc', 'Ibase', 'class', 'alert_url'])
      
-    df['t0_err'] = np.nan
-    df['SNR_t0'] = np.nan
-    df['tE_err'] = np.nan
-    df['u0_err'] = np.nan
-    df['Ibase_err'] = np.nan
-    df['Isrc_err'] = np.nan
+    df['t0_err'] = float(0)
+    df['tE_err'] = float(0)
+    df['u0_err'] = float(0)
+    df['Ibase_err'] = float(0)
+    df['Isrc_err'] = float(0)
     df['srcfrac'] = calculate_srcfrac(df['Isrc'], df['Ibase'])
-    df['srcfrac_err'] = np.nan
+    df['srcfrac_err'] = float(0)
     df['related_event'] = rel_ev_list
 
     _t1 = time.time() 
