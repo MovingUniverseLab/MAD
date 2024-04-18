@@ -584,7 +584,7 @@ def get_kmtnet_alerts(year):
     rel_ev_list = [item.get_text().replace(u'\xa0', u'') for item in rel_ev]
     if year in years_oneclass:
         class_list = [item.get_text().replace(u'\xa0', u'') for item in class_]
-    elif year in years_oneclass:
+    elif year in years_twoclass:
         classEF_list = [item.get_text().replace(u'\xa0', u'') for item in classEF]
         classAL_list = [item.get_text().replace(u'\xa0', u'') for item in classAL]
 
