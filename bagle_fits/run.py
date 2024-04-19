@@ -104,4 +104,4 @@ def run_one(target):
     query_output = json.load(open(sorted(glob('query_output*'))[-1]))
     run_bagle(target, list(query_output['data_sets'][target].keys()), modstr)
 
-#run_all()
+run_all()
