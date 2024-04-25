@@ -102,13 +102,13 @@ def get_moa_lightcurves(year):
         df['alert_name'] = 'MB' + year[2:] + str(nn + 1).zfill(3)  # need to make sure this always works.
         df['telescope'] = 'MOA'
         
-        # Write HJD as HJD - 2450000 to match OGLE and KMTNet (less cumbersome digits)
-        df['hjd'] -= 2400000.5
+        # Change JD to MJD
+        df['mjd'] -= 2400000.5
 
         # Get rid of all the nans which crop up during the conversion from delta flux to magnitude.
         df.dropna(axis='index', how='any', inplace=True)
 
-        # Write out the HJD, mag, mag_err, telescope, and alert_name data into the table.
+        # Write out the MJD, mag, mag_err, telescope, and alert_name data into the table.
         cols = ['mjd', 'mag', 'mag_err', 'telescope', 'alert_name']
         df[cols].to_sql(con=engine, schema=None, name="photometry", if_exists="append", index=False)
     t1 = time.time() 
@@ -129,7 +129,7 @@ def get_ogle_lightcurves(year):
     Outputs
     -------
     sqlite table called photometry in microlensing.db
-    Columns are hjd (HJD - 245000), mag, mag_err, alert_name, and telescope.
+    Columns are mjd, mag, mag_err, alert_name, and telescope.
     """
     # Go to the OGLE alert site and get the data with FTP.
     year = str(year)
@@ -160,10 +160,10 @@ def get_ogle_lightcurves(year):
             df['alert_name'] = 'O' + pref[0].upper() + year[2:] + str(nn).zfill(4) 
             df['telescope'] = 'OGLE'
             
-            # Write HJD as HJD - 2450000 (less cumbersome digits)
+            # Change JD to MJD
             df['mjd'] -= 2400000.5
             
-            # Write out the HJD, mag, mag_err, telescope, and alert_name data into the table.
+            # Write out the MJD, mag, mag_err, telescope, and alert_name data into the table.
             cols = ['mjd', 'mag', 'mag_err', 'telescope', 'alert_name']
             df[cols].to_sql(con=engine, schema=None, name="photometry", if_exists="append", index=False)
 
@@ -187,7 +187,7 @@ def get_kmtnet_lightcurves(year):
     Outputs
     -------
     sqlite table called photometry in microlensing.db
-    Columns are hjd (HJD - 245000), mag, mag_err, alert_name, and telescope (the pysis name).
+    Columns are mjd, mag, mag_err, alert_name, and telescope (the pysis name).
     """
     # Figure out how many objects there are by counting how many columns
     # there are on the alert page.
@@ -231,10 +231,10 @@ def get_kmtnet_lightcurves(year):
                 df['alert_name'] = 'KB' + year[2:] + str(nn).zfill(4) 
                 df['telescope'] = pysis_name
                 
-                # Write HJD as HJD - 2450000 (less cumbersome digits)
-                df['mjd'] -= 2450000
+                # Change JD to MJD
+                df['mjd'] -= 2400000.5
 
-                # Write out the HJD, mag, mag_err, telescope, and alert_name data into the table.
+                # Write out the mJD, mag, mag_err, telescope, and alert_name data into the table.
                 cols = ['mjd', 'mag', 'mag_err', 'telescope', 'alert_name']
                 df[cols].to_sql(con=engine, schema=None, name="photometry", 
                                 if_exists="append", index=False)
@@ -298,7 +298,7 @@ def get_moa_alerts(year):
     Parameters
     ----------
     year : int
-        Year of the OGLE alerts you want.
+        Year of the MOA alerts you want.
         Valid choices are 2001 - 2019, inclusive.
         
     Outputs
@@ -338,7 +338,7 @@ def get_moa_alerts(year):
                      columns = ['alert_name', 'RA', 'Dec', 'l', 'b', 't0', 't0_err', 'tE', 'tE_err', 
                                 'u0', 'u0_err', 'Ibase', 'Ibase_err', 'class', 'alert_url'])
     
-    # Write HJD as HJD - 2450000 (less cumbersome digits)
+    # Change JD to MJD
     df['t0'] -= 2400000.5
     
     # Fill in the other columns
@@ -498,7 +498,7 @@ def get_ogle_alerts(year):
     df['class'] = 'microlensing'
     df['related_event'] = ''
     
-    # Write HJD as HJD - 2450000 (less cumbersome digits)
+    # Change JD to MJD
     df['t0'] -= 2400000.5
 
     df.to_sql(con=engine, schema=None, name="alerts", if_exists="append", index=False)
@@ -544,27 +544,23 @@ def get_kmtnet_alerts(year):
     # classifications ("EF" and "AL", I don't know what it means).
     # For years where there are two classifications, I've picked 
     # AL classification arbitrarily.
-    if year in ['2023','2022', '2020', '2017', '2016']:
+    years_oneclass = ['2024', '2022', '2020', '2017', '2016']
+    years_twoclass = ['2023', '2021', '2019', '2018']
+    if year in years_oneclass:
         class_ = soup.find_all('td')[3::15][1:]
         RA = soup.find_all('td')[4::15][1:]
         Dec = soup.find_all('td')[5::15][1:]
-        '''c = SkyCoord(ra=RA, dec=Dec, unit=(u.hourangle, u.deg), frame='icrs')
-        b = c.galactic.b.degree
-        l = c.galactic.l.degree'''
         t_0 = soup.find_all('td')[6::15][1:]
         t_E = soup.find_all('td')[7::15][1:]
         u_0 = soup.find_all('td')[8::15][1:]
         Isource = soup.find_all('td')[9::15][1:]
         Ibase = soup.find_all('td')[10::15][1:]
         rel_ev = soup.find_all('td')[14::15][1:]
-    elif year in ['2021', '2019', '2018']:
+    elif year in years_twoclass:
         classEF = soup.find_all('td')[3::16][1:]
         classAL = soup.find_all('td')[4::16][1:]
         RA = soup.find_all('td')[5::16][1:]
         Dec = soup.find_all('td')[6::16][1:]
-        '''c = SkyCoord(ra=RA, dec=Dec, unit=(u.hourangle, u.deg), frame='icrs')
-        b = c.galactic.b.degree
-        l = c.galactic.l.degree'''
         t_0 = soup.find_all('td')[7::16][1:]
         t_E = soup.find_all('td')[8::16][1:]
         u_0 = soup.find_all('td')[9::16][1:]
@@ -586,16 +582,16 @@ def get_kmtnet_alerts(year):
     Isource_list = [kmtnet_str_to_float(item) for item in Isource]
     Ibase_list = [kmtnet_str_to_float(item) for item in Ibase]
     rel_ev_list = [item.get_text().replace(u'\xa0', u'') for item in rel_ev]
-    if year in ['2023','2022', '2020', '2017', '2016']:
+    if year in years_oneclass:
         class_list = [item.get_text().replace(u'\xa0', u'') for item in class_]
-    elif year in ['2021', '2019', '2018']:
+    elif year in years_twoclass:
         classEF_list = [item.get_text().replace(u'\xa0', u'') for item in classEF]
         classAL_list = [item.get_text().replace(u'\xa0', u'') for item in classAL]
 
     # Get link to the alert page.
-    if year in ['2023','2022', '2020', '2017', '2016']:
+    if year in years_oneclass:
         alert_url = soup.find_all('td')[0::15][1:]
-    elif year in ['2021', '2019', '2018']:
+    elif year in years_twoclass:
         alert_url = soup.find_all('td')[0::16][1:]
     else:
         raise Exception('Not a valid year')
@@ -608,25 +604,25 @@ def get_kmtnet_alerts(year):
     for ii in np.arange(nn):
         alert_name.append('KB' + year[2:] + str(ii+1).zfill(4))
 
-    if year in ['2023','2022', '2020', '2017', '2016']:
+    if year in years_oneclass:
         # Put it all into a dataframe and write out to the database.
         df = pd.DataFrame(list(zip(alert_name, RA_list, Dec_list, l, b, t_0_list, t_E_list, u_0_list,
                                    Isource_list, Ibase_list, class_list, alert_url_list)),
                          columns =['alert_name', 'RA', 'Dec', 'l', 'b', 't0', 'tE', 'u0',
                                    'Isrc', 'Ibase', 'class', 'alert_url'])
-    elif year in ['2021', '2019', '2018']:
+    elif year in years_twoclass:
         df = pd.DataFrame(list(zip(alert_name, RA_list, Dec_list, l, b, t_0_list, t_E_list, u_0_list,
                            Isource_list, Ibase_list, classEF_list, alert_url_list)),
                  columns =['alert_name', 'RA', 'Dec', 'l', 'b', 't0', 'tE', 'u0',
                            'Isrc', 'Ibase', 'class', 'alert_url'])
      
-    df['t0_err'] = np.nan
-    df['tE_err'] = np.nan
-    df['u0_err'] = np.nan
-    df['Ibase_err'] = np.nan
-    df['Isrc_err'] = np.nan
+    df['t0_err'] = float(0)
+    df['tE_err'] = float(0)
+    df['u0_err'] = float(0)
+    df['Ibase_err'] = float(0)
+    df['Isrc_err'] = float(0)
     df['srcfrac'] = calculate_srcfrac(df['Isrc'], df['Ibase'])
-    df['srcfrac_err'] = np.nan
+    df['srcfrac_err'] = float(0)
     df['related_event'] = rel_ev_list
 
     _t1 = time.time() 

@@ -17,9 +17,10 @@ from astropy import time as atime, coordinates as coord, units as u
 import os
 from datetime import date
 import json
+from glob import glob
 
 mad_dir = os.getcwd()+'/' #'/u/mhuston/code/MAD/'
-data = json.load(open(mad_dir+'query_output_' + str(date.today()) + '.json'))
+data = json.load(open(sorted(glob(mad_dir+'query_output*'))[-1]))
 
 ra = data['ra']
 dec = data['dec']
@@ -42,23 +43,24 @@ print(data_sets)
 
 def getpriors(target):
     # Get alert fit info as starting points to set priors for BAGLE fit
-    alertkeys = ['t0', 't0_err', 'tE', 'tE_err', 'Ibase', 'Ibase_err', 'Isrc', 'Isrc_err', 'srcfrac', 'srcfrac_err']
+    #alertkeys = ['t0', 't0_err', 'tE', 'tE_err', 'Ibase', 'Ibase_err', 'Isrc', 'Isrc_err', 'srcfrac', 'srcfrac_err']
+    alertkeys = ['t0', 'tE', 'Ibase']
     alertfit = {}
     for key in alertkeys:
         alertfit[key] = data[key][target]
 
     # Calculate reasonable priors based on alert fit
-    priorkeys = ['t0', 'tE', 'Isrc', 'srcfrac']
+    #priorkeys = ['t0', 'tE', 'Isrc', 'srcfrac']
     priors = {}
 
-    priors['t0'] = [alertfit['t0'] - alertfit['tE']/2, alertfit['t0'] + alertfit['tE']/2]
-    priors['tE'] = [alertfit['tE'] - alertfit['tE']/2, alertfit['tE'] + alertfit['tE']/2]
-    priors['Ibase'] = [alertfit['Ibase'] - 0.2, alertfit['Isrc'] + 0.2]
+    priors['t0'] = [alertfit['t0'] - alertfit['tE'], alertfit['t0'] + alertfit['tE']]
+    priors['tE'] = [min(alertfit['tE']/2, 14), alertfit['tE'] + alertfit['tE']/2]
+    priors['Ibase'] = [alertfit['Ibase'] - 0.5, alertfit['Ibase'] + 0.5]
 
     # Don't put real limits on blending
     #priors['srcfrac'] = [0.001,1.05]
 
-    print(priors)
+    #print(priors)
     return priors
 
 def getdata2(target, phot_data=['I_OGLE'], ast_data=['Kp_Keck'],
@@ -147,9 +149,9 @@ def getdata2(target, phot_data=['I_OGLE'], ast_data=['Kp_Keck'],
         if filt == 'I_OGLE':
             # Read in photometry table.
             pho = Table.read(data_sets[target][filt], format = 'ascii')
-            t = Time(pho['col1'], format='jd', scale='utc')
-            m = pho['col2']
-            me = pho['col3']
+            t = Time(pho['mjd'], format='mjd', scale='utc')
+            m = pho['mag']
+            me = pho['mag_err']
 
         if filt == 'Kp_Keck':
             pho = Table.read(data_sets[target][filt])
@@ -201,13 +203,13 @@ def getdata2(target, phot_data=['I_OGLE'], ast_data=['Kp_Keck'],
                 
             me = np.ones(len(t), dtype=float) * me_neigh
 
-        if filt == 'Ch1_Spitzer':
-            pho = Table.read(data_sets[target][filt], format='ascii')
-            t = Time(pho['col1']  + 2450000.0, format='jd', scale='utc')
-            f = pho['col2']
-            fe = pho['col3']
-            m = 25.0 - 2.5 * np.log10(f)
-            me = 1.086 * fe / f
+        #if filt == 'Ch1_Spitzer':
+        #    pho = Table.read(data_sets[target][filt], format='ascii')
+        #    t = Time(pho['col1']  + 2450000.0, format='jd', scale='utc')
+        #    f = pho['col2']
+        #    fe = pho['col3']
+        #    m = 25.0 - 2.5 * np.log10(f)
+        #    me = 1.086 * fe / f
 
         if filt == 'MOA':
             pho = Table.read(data_sets[target][filt], format='ascii')
@@ -243,8 +245,8 @@ def getdata2(target, phot_data=['I_OGLE'], ast_data=['Kp_Keck'],
                 me = me[::-1]
 
         if filt == 'KMT':
-            pho = Table.read(data_sets[target][filt], format='ascii')
-            t = Time(pho['HJD'] + 2450000.0, format='jd', scale='utc')
+            pho = Table.read(data_sets[target][filt], format = 'ascii')
+            t = Time(pho['mjd'], format='mjd', scale='utc')
             m = pho['mag']
             me = pho['mag_err']
 
