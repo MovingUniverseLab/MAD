@@ -128,7 +128,7 @@ def download_json(query_str):
     t0 = {}
     tE = {}
     Ibase = {}
-    scrfrac = {}
+    srcfrac = {}
     u0 = {}
     Isrc = {}
     related_event = {}
