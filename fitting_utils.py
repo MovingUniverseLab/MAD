@@ -119,17 +119,18 @@ def kmt_lightcurves_from_list(kmt_list):
                                  delim_whitespace=True, skiprows=1, header=None, 
                                  names=['mjd', 'Delta_flux', 'flux_err', 'mag', 'mag_err', 'fwhm', 'sky', 'secz'])
                 df['mjd'] -= 2400000.5
-                df_list.append(df)
-
                 # Write out the MJD, mag, mag_err, telescope, and alert_name data into the table.
                 cols = ['mjd', 'mag', 'mag_err']
+                df_list.append(df)
 
-                #Download dataframe object as a csv file to the specific folder within MAD
-                path = 'lightcurves/KMTNet/' + event + '.csv'
-                file_dirs[event] = path
-                file_path = Path(path)
-                file_path.parent.mkdir(parents=True, exist_ok=True)
-                df[cols].to_csv(file_path, index=False)
+        #Download dataframe object as a csv file to the specific folder within MAD
+        lightcurve = pd.concat(df_list)
+        lightcurve.sort_values(by=['mjd'])
+        path = 'lightcurves/KMTNet/' + event + '.csv'
+        file_dirs[event] = path
+        file_path = Path(path)
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        lightcurve[cols].to_csv(file_path, index=False)
     return file_dirs
 
 def ogle_lightcurves_from_list(ogle_list):
