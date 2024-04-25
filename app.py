@@ -118,12 +118,20 @@ def download_json(query_str):
     t0_list = df['t0'].squeeze().to_list()
     tE_list = df['tE'].squeeze().to_list()
     Ibase_list = df['Ibase'].squeeze().to_list()
+    srcfrac_list = df['srcfrac'].squeeze().to_list()
+    u0_list = df['u0'].squeeze().to_list()
+    Isrc_list = df['Isrc'].squeeze().to_list()
+    related_event_list = df['related_event'].squeeze().to_list()
 
     ra = {}
     dec = {}
     t0 = {}
     tE = {}
     Ibase = {}
+    scrfrac = {}
+    u0 = {}
+    Isrc = {}
+    related_event = {}
     moa_alerts = []
     kmt_alerts = []
     ogle_alerts = []
@@ -138,6 +146,10 @@ def download_json(query_str):
         t0.update({name_list[i]: t0_list[i]})
         tE.update({name_list[i]: tE_list[i]})
         Ibase.update({name_list[i]: Ibase_list[i]})
+        srcfrac.update({name_list[i]: srcfrac_list[i]})
+        u0.update({name_list[i]: u0_list[i]})
+        Isrc.update({name_list[i]: Isrc_list[i]})
+        related_event.update({name_list[i]: related_event_list[i]})
         if "OB" or "OD" or "OG" in name_list[i]:
             ogle_alerts.append(name_list[i])
             data = {name_list[i] : ogle_data}
@@ -151,7 +163,9 @@ def download_json(query_str):
     moa_lightcurves = fitting_utils.moa_lightcurves_from_list(moa_alerts)
     kmt_lightcurves = fitting_utils.kmt_lightcurves_from_list(kmt_alerts)
     ogle_lightcurves = fitting_utils.ogle_lightcurves_from_list(ogle_alerts)
-    dict = {'ra': ra, 'dec': dec, 't0' : t0, 'tE' : tE, 'Ibase' : Ibase, 'photom_moa': moa_lightcurves, 'photom_kmt' : kmt_lightcurves, 'photom_ogle' : ogle_lightcurves, 'data_sets': data_set_dict}
+    dict = {'ra': ra, 'dec': dec, 't0' : t0, 'tE' : tE, 'Ibase' : Ibase, 'photom_moa': moa_lightcurves, 
+    'photom_kmt' : kmt_lightcurves, 'photom_ogle' : ogle_lightcurves, 'data_sets': data_set_dict, 
+    'srcfrac': srcfrac, 'u0': u0, 'Isrc': Isrc, 'related_event': related_event}
     json_object = json.dumps(dict, indent=2)
     open('query_output_' + str(date.today()) + '.json', 'w').write(json_object)
     return render_template('json.html', json_object=json_object)
