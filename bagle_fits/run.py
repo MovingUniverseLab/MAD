@@ -98,13 +98,6 @@ def run_all():
     query_output = json.load(open(sorted(glob('query_output*'))[-1]))
     target_list = list(query_output['ra'].keys())
     for target in target_list:
-        if target[0] == 'O':
-            alert_sys = "OGLE"
-        if target[0] == 'K':
-            alert_sys = "KMTNet"
-        if target[0] == 'M':
-            alert_sys = "MOA"
-        data = pd.read_csv("lightcurves/" + alert_sys + "/" + target + ".csv")
         run_bagle(target, list(query_output['data_sets'][target].keys()), modstr)
 
 def run_one(target):
