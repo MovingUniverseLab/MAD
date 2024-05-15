@@ -252,7 +252,7 @@ def getdata2(target, phot_data=['I_OGLE'], ast_data=['Kp_Keck'],
 
         if filt == 'KMT_DIA':
             pho = Table.read(data_sets[target][filt], format='ascii')
-            t = Time(pho['col1'] + 2450000.0, format='jd', scale='utc')
+            t = Time(pho['mjd'], format='mjd', scale='utc')
             m = 27.68-2.5*np.log10(pho['col2']+27300)
             me = -1.08 * pho['col3']/(pho['col2'] + 27300)
 

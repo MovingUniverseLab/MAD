@@ -122,6 +122,7 @@ def download_json(query_str):
     u0_list = df['u0'].squeeze().to_list()
     Isrc_list = df['Isrc'].squeeze().to_list()
     related_event_list = df['related_event'].squeeze().to_list()
+    alert_url_list = df['alert_url'].squeeze().to_list()
 
     ra = {}
     dec = {}
@@ -138,7 +139,8 @@ def download_json(query_str):
     data_set_dict = {}
     ogle_data = {'I_OGLE': 'photom_ogle'}
     moa_data = {'MOA' : 'photom_moa'}
-    kmt_data = {'KMT': 'photom_kmt'}
+    kmt_data = {'KMT_DIA': 'photom_kmt'}
+    alert_urls = {}
     for i in range(len(ra_list)): 
         data = {}
         ra.update({name_list[i]: ra_list[i]})
@@ -150,6 +152,7 @@ def download_json(query_str):
         u0.update({name_list[i]: u0_list[i]})
         Isrc.update({name_list[i]: Isrc_list[i]})
         related_event.update({name_list[i]: related_event_list[i]})
+        alert_urls.update({name_list[i]: alert_url_list[i]})
         if "OB" or "OD" or "OG" in name_list[i]:
             ogle_alerts.append(name_list[i])
             data = {name_list[i] : ogle_data}
@@ -165,7 +168,7 @@ def download_json(query_str):
     ogle_lightcurves = fitting_utils.ogle_lightcurves_from_list(ogle_alerts)
     dict = {'ra': ra, 'dec': dec, 't0' : t0, 'tE' : tE, 'Ibase' : Ibase, 'photom_moa': moa_lightcurves, 
     'photom_kmt' : kmt_lightcurves, 'photom_ogle' : ogle_lightcurves, 'data_sets': data_set_dict, 
-    'srcfrac': srcfrac, 'u0': u0, 'Isrc': Isrc, 'related_event': related_event}
+    'srcfrac': srcfrac, 'u0': u0, 'Isrc': Isrc, 'related_event': related_event, 'alert_url' : alert_urls}
     json_object = json.dumps(dict, indent=2)
     open('query_output_' + str(date.today()) + '.json', 'w').write(json_object)
     return render_template('json.html', json_object=json_object)

@@ -107,9 +107,9 @@ def kmt_lightcurves_from_list(kmt_list):
 
         # Get the names of all the different lightcurve files (pysis names).
         links = soup.find_all('a', href=True)
-        pysis_names = links[3].get_text(separator=',').split(',')[:-2]
+        lightcurve_names = links[3].get_text(separator=',').split(',')[:-2]
         # Note, we are only keeping I-band lightcurves (V-band ones are not useful).
-        for pysis_name in pysis_names:
+        """for pysis_name in pysis_names:
             if '_I.pysis' in pysis_name:
                 # Grab the photometry for each alert's I-band lightcurve data into a pands dataframe.
                 url = "https://kmtnet.kasi.re.kr/~ulens/event/" + year + "/data/KB" + \
@@ -118,6 +118,18 @@ def kmt_lightcurves_from_list(kmt_list):
                 df = pd.read_csv(BytesIO(bytes_data), 
                                  delim_whitespace=True, skiprows=1, header=None, 
                                  names=['mjd', 'Delta_flux', 'flux_err', 'mag', 'mag_err', 'fwhm', 'sky', 'secz'])
+                df['mjd'] -= 2400000.5
+                # Write out the MJD, mag, mag_err, telescope, and alert_name data into the table.
+                cols = ['mjd', 'mag', 'mag_err']
+                df_list.append(df)"""
+        for dia in lightcurve_names:
+            if '_I.diapl' in dia:
+                url = "https://kmtnet.kasi.re.kr/~ulens/event/" + year + "/data/KB" + \
+                        year[2:] + str(num) + "/diapl/" + dia
+                bytes_data = requests.get(url).content
+                df = pd.read_csv(BytesIO(bytes_data), 
+                                 delim_whitespace=True, skiprows=1, header=None, 
+                                 names=['mjd', 'flux', 'flux_err'])
                 df['mjd'] -= 2400000.5
                 # Write out the MJD, mag, mag_err, telescope, and alert_name data into the table.
                 cols = ['mjd', 'mag', 'mag_err']
