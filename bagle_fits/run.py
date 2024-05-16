@@ -97,8 +97,12 @@ def run_all():
     modstr = 'pspl_phot_par'
     query_output = json.load(open(sorted(glob('query_output*'))[-1]))
     target_list = list(query_output['ra'].keys())
+    file = open('ignore_events_list.txt','r')
+    ignored_events = file.readlines()
+    file.close()
     for target in target_list:
-        run_bagle(target, list(query_output['data_sets'][target].keys()), modstr)
+        if target not in ignored_events:
+            run_bagle(target, list(query_output['data_sets'][target].keys()), modstr)
 
 def run_one(target):
     modstr = 'pspl_phot_par'
