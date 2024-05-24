@@ -25,12 +25,12 @@ import requests
 def main():
     # This is your 'main' function where you can call other functions or initialize multiprocessing tasks
     print("Main function is starting.")
-    year = 2024
+    year = 2023
     # WORKING:
-    # get_moa_alerts(year)                #
-    # get_kmtnet_alerts(year)           # No 2024 data yet
-    # get_ogle_alerts(year)
-    get_moa_lightcurves(2023)
+    get_moa_alerts(year)                #
+    get_kmtnet_alerts(year)           # No 2024 data yet
+    get_ogle_alerts(year)
+    # get_moa_lightcurves(2023)
 #    get_kmtnet_lightcurves(2024)
 #    get_ogle_lightcurves(2024)
 
