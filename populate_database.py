@@ -1,6 +1,6 @@
 import query_alerts
 
-def run(year=2024,sources=['OGLE','KMTNet']):
+def run(year=2024,sources=['OGLE','KMTNet', 'MOA']):
     if 'MOA' in sources:
         query_alerts.get_moa_alerts(year)
         print('Downloaded MOA alerts from '+str(year)+' to database.')
