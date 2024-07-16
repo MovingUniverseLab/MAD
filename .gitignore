@@ -1,0 +1,4 @@
+data_alerts/*
+data_photometry/*
+.ipynb_checkpoints/
+.virtual_documents/
