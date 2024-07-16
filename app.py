@@ -139,7 +139,7 @@ def download_json(query_str):
     data_set_dict = {}
     ogle_data = {'I_OGLE': 'photom_ogle'}
     moa_data = {'MOA' : 'photom_moa'}
-    kmt_data = {'KMT_DIA': 'photom_kmt'}
+    kmt_data = {'KMT': 'photom_kmt'}
     alert_urls = {}
     for i in range(len(ra_list)): 
         data = {}

@@ -32,9 +32,16 @@ def run_bagle(target, phot_data, modstr):
     outdir = 'bagle_fits/'+target+'/fits_'+datestr+'/'+modstr+'/'
     outbase = 'b0_'
     os.makedirs(outdir, exist_ok=True)
+    
+    if modstr=='pspl_phot_par':
+        model_selection = model.PSPL_Phot_Par_Param2
+    elif modstr=='bspl_phot_par':
+        model_selection = model.BSPL_Phot_Par_Param1
+    elif modstr=='bspl_phot_nopar':
+        model_selection = model.BSPL_Phot_noPar_Param1
 
     fitter = model_fitter.PSPL_Solver(data,
-                                      model.PSPL_Phot_Par_Param2,
+                                      model_selection,
                                       importance_nested_sampling = False,
                                       n_live_points = 400,
                                       evidence_tolerance = 0.5,
@@ -49,8 +56,19 @@ def run_bagle(target, phot_data, modstr):
     fitter.priors['piE_N'] = model_fitter.make_norm_gen(-0.03, 0.13)
     fitter.priors['b_sff1'] = model_fitter.make_gen(0.0,1.05)
     #fitter.priors['b_sff2'] = model_fitter.make_gen(0, 1.01)
-    fitter.priors['mag_base1'] = model_fitter.make_gen(*priors['Ibase'])
+    if modstr[:4]=='pspl':
+        fitter.priors['mag_base1'] = model_fitter.make_gen(*priors['Ibase'])
     #fitter.priors['mag_src2'] = model_fitter.make_gen(18, 21)
+    
+    if modstr[:4]=='bspl':
+        fitter.priors['sep'] = model_fitter.make_gen(0.0,2.0)
+        fitter.priors['phi'] = model_fitter.make_gen(0.0,360.0)
+        fitter.priors['mag_src_pri1'] = model_fitter.make_gen(priors['Ibase'][0], priors['Ibase'][1]+3)
+        fitter.priors['mag_src_sec1'] = model_fitter.make_gen(priors['Ibase'][0], priors['Ibase'][1]+3)
+        
+    if target[0]=='K' or target[0]=='M':
+        fitter.priors['mag_base1'] = model_fitter.make_gen(data['med_mag1']-1.0,data['med_mag1']+1.0)
+        print(data['med_mag1']-1.0,data['med_mag1']+1.0)
 
     ##########
     # BELOW: Do not change.
@@ -87,26 +105,29 @@ def run_bagle(target, phot_data, modstr):
         plt.close('all')
         best_mod = fitter.get_best_fit_model(def_best='maxL')
         fitter.plot_model_and_data(best_mod, suffix='_maxL',
-                                   zoomx=[[60000, 60500], None, None],
-                                   zoomy=[[16.8, 15], None, None],
-                                   zoomy_res=[[-0.1, 0.1], None, None])
+                                   zoomx=[[60310, 60780], None, None],
+                                   zoomy=[[np.max(data['mag']), np.min(data['mag'])], None, None],
+                                   zoomy_res=[[-0.5, 0.5], None, None])
         plt.close('all')
 
-def run_all():
+def run_all(modstr='pspl_phot_par'):
     # Get required inputs for fit
-    modstr = 'pspl_phot_par'
     query_output = json.load(open(sorted(glob('query_output*'))[-1]))
     target_list = list(query_output['ra'].keys())
     #file = open('ignore_events_list.txt','r')
     ignored_events = []#file.readlines()
     #file.close()
     for target in target_list:
-        if target not in ignored_events:
+        #if (target not in ignored_events) and (target[0]!='O')and (target[0]!='M'):
+        try:
+            print(target)
             run_bagle(target, list(query_output['data_sets'][target].keys()), modstr)
+        #else:
+        except:
+            print('skip', target)
 
-def run_one(target):
-    modstr = 'pspl_phot_par'
+def run_one(target, modstr='pspl_phot_par'):
     query_output = json.load(open(sorted(glob('query_output*'))[-1]))
     run_bagle(target, list(query_output['data_sets'][target].keys()), modstr)
 
-#run_all()
+run_all() #one('MB24028')  #('KB241458')

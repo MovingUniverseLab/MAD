@@ -215,14 +215,22 @@ def getdata2(target, phot_data=['I_OGLE'], ast_data=['Kp_Keck'],
             pho = Table.read(data_sets[target][filt], format='ascii')
             # Convert HJD provided by MOA into JD.
             # https://geohack.toolforge.org/geohack.php?pagename=Mount_John_University_Observatory&params=43_59.2_S_170_27.9_E_region:NZ-CAN_type:landmark
-            moa = coord.EarthLocation(lat=-43.986667 * u.deg,lon=170.465*u.deg, height=1029*u.meter)
+            #moa = coord.EarthLocation(lat=-43.986667 * u.deg,lon=170.465*u.deg, height=1029*u.meter)
             #print(type(atime))
-            t_hjd = atime.Time(pho['col1'], format='jd', scale = 'utc')
-            ltt = t_hjd.light_travel_time(target_coords, 'heliocentric', location=moa)
+            t_hjd = atime.Time(pho['mjd'], format='mjd', scale = 'utc')
+            #ltt = t_hjd.light_travel_time(target_coords, 'heliocentric', location=moa)
 
-            t = t_hjd - ltt
-            m = pho['col5']
-            me = pho['col6']
+            t = t_hjd #- ltt
+            m = pho['mag']
+            me = pho['mag_err']
+            print(t)
+            print(m)
+            print(me)
+            
+            use = np.where(me<2)[0]
+            t = t[use]
+            m = m[use]
+            me=me[use]
 
         if filt[0:3] == 'HST':
             pho = Table.read(data_sets[target][filt])
@@ -245,16 +253,24 @@ def getdata2(target, phot_data=['I_OGLE'], ast_data=['Kp_Keck'],
                 me = me[::-1]
 
         if filt == 'KMT':
-            pho = Table.read(data_sets[target][filt], format = 'ascii')
-            t = Time(pho['mjd'], format='mjd', scale='utc')
-            m = pho['mag']
-            me = pho['mag_err']
-
-        if filt == 'KMT_DIA':
+        #    pho = Table.read(data_sets[target][filt], format = 'ascii')
+        #    t = Time(pho['mjd'], format='mjd', scale='utc')
+        #    m = pho['mag']
+        #    me = pho['mag_err']
+        #
+        #if filt == 'KMT_DIA':
             pho = Table.read(data_sets[target][filt], format='ascii')
             t = Time(pho['mjd'], format='mjd', scale='utc')
-            m = 27.68-2.5*np.log10(pho['col2']+27300)
-            me = -1.08 * pho['col3']/(pho['col2'] + 27300)
+            m = 27.68-2.5*np.log10(pho['flux']+27300)
+            me = 1.08 * pho['flux_err']/(pho['flux'] + 27300)
+            print(m)
+            print(me)
+            nans = np.where(~np.isnan(m))[0]
+            t = t[nans]
+            m = m[nans]
+            me=np.abs(me[nans])
+
+            
 
         # Set time to proper format
         if time_format == 'mjd':
@@ -272,6 +288,7 @@ def getdata2(target, phot_data=['I_OGLE'], ast_data=['Kp_Keck'],
         data['t_phot' + suffix] = t
         data['mag' + suffix] = m
         data['mag_err' + suffix] = me
+        data['med_mag' + suffix] = np.median(m)
 
     for aa in range(len(ast_data)):
         filt = ast_data[aa]
@@ -338,6 +355,7 @@ def getdata2(target, phot_data=['I_OGLE'], ast_data=['Kp_Keck'],
 
     data['phot_files'] = phot_files
     data['ast_files'] = ast_files
+    
             
     return data
 
